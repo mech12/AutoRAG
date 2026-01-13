@@ -227,7 +227,7 @@ validate: ## Validate config file
 list-testcases: ## List all available test cases
 	@$(PYTHON) scripts/testcase_config.py
 
-run-testcase: ## Run full workflow for a test case (TESTCASE required)
+run-testcase: ## Run full workflow (= prepare-data + evaluate-custom)
 	@if [ -z "$(TESTCASE)" ]; then echo "Usage: make run-testcase TESTCASE=<name>"; echo ""; $(PYTHON) scripts/testcase_config.py; exit 1; fi
 	$(MAKE) prepare-data TESTCASE=$(TESTCASE)
 	$(MAKE) evaluate-custom TESTCASE=$(TESTCASE)
