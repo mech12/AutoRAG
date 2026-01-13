@@ -4,6 +4,10 @@
 # Default target
 .DEFAULT_GOAL := help
 
+# Load environment variables from .env file (if exists)
+-include .env
+export
+
 # Variables
 VENV := .venv
 PYTHON := python
@@ -65,7 +69,8 @@ quick-test: ## Run RAG evaluation with sample data (requires OPENAI_API_KEY)
 		--corpus_data_path $(SAMPLE_CORPUS) \
 		--project_dir $(PROJECT_DIR)
 
-quick-test-custom: ## Run RAG evaluation with custom LLM server
+quick-test-custom: ## Run RAG evaluation with custom LLM server (requires .env)
+	@if [ ! -f .env ]; then echo "Error: .env file not found. Copy .env.example to .env first."; exit 1; fi
 	autorag evaluate \
 		--config $(CONFIG_CUSTOM) \
 		--qa_data_path $(SAMPLE_QA) \
