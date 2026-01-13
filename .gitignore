@@ -166,3 +166,4 @@ projects/tutorial_1
 !projects/tutorial_1/config.yaml
 
 .vscode/
+.claude/
