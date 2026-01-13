@@ -33,6 +33,21 @@ test_cases:
     use_llm: true
 
   # -------------------------------------------------------------------------
+  # 고급 파싱/청킹 테스트 (인사규정 기준)
+  # -------------------------------------------------------------------------
+  # 외부 parse_config, chunk_config 파일 사용
+  # 참고: parse_hybird.yaml은 LlamaParse API 키 필요 (LLAMA_CLOUD_API_KEY)
+  # 참고: chunk_ko.yaml은 여러 청킹 방법을 비교 테스트
+
+  hr_rule_hybrid_chunk_ko:
+    description: "인사규정 - 하이브리드 파서 + 한국어 청킹"
+    input_dir: "docs/sample-data/인사규정"
+    output_dir: "logs/testCase/hr_rule_hybrid_chunk_ko"
+    parse_config: "sample_config/parse/parse_hybird.yaml"
+    chunk_config: "sample_config/chunk/chunk_ko.yaml"
+    rag_config: "sample_config/rag/korean/non_gpu/simple_korean_milvus.yaml"
+
+  # -------------------------------------------------------------------------
   # 고압가스 (Gas Safety) 테스트 케이스
   # -------------------------------------------------------------------------
   gas_safety:

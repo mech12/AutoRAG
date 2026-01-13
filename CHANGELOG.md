@@ -21,6 +21,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - Add `make show-testcase TESTCASE=<name>` command to display QA data
 - Add documentation for QA generation methods and test results
 - Add comprehensive sample_config guide (parse, chunk, RAG settings)
+- Add support for external parse_config and chunk_config in test cases
+  - New testcase fields: `parse_config`, `chunk_config`
+  - Example: `hr_rule_hybrid_chunk_ko` using `parse_hybird.yaml` + `chunk_ko.yaml`
 
 ## 2026-01-08
 

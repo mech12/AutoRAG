@@ -35,38 +35,58 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def create_parse_config(output_dir: str) -> str:
-    """파싱 설정 YAML 파일 생성"""
-    config_content = """modules:
+def create_parse_config(output_dir: str, external_config: str = "") -> str:
+    """파싱 설정 YAML 파일 생성 또는 외부 설정 복사"""
+    config_path = os.path.join(output_dir, "parse_config.yaml")
+    os.makedirs(output_dir, exist_ok=True)
+
+    if external_config and os.path.exists(external_config):
+        # 외부 설정 파일 복사
+        import shutil
+        shutil.copy(external_config, config_path)
+        print(f"  외부 parse config 사용: {external_config}")
+    else:
+        # 기본 pdfminer 설정 생성
+        config_content = """modules:
   - module_type: langchain_parse
     file_type: pdf
     parse_method: pdfminer
 """
-    config_path = os.path.join(output_dir, "parse_config.yaml")
-    os.makedirs(output_dir, exist_ok=True)
-    with open(config_path, "w") as f:
-        f.write(config_content)
+        with open(config_path, "w") as f:
+            f.write(config_content)
+        print("  기본 parse config 사용: pdfminer")
+
     return config_path
 
 
 def create_chunk_config(
-    output_dir: str, chunk_size: int = 512, chunk_overlap: int = 50
+    output_dir: str, chunk_size: int = 512, chunk_overlap: int = 50, external_config: str = ""
 ) -> str:
-    """청킹 설정 YAML 파일 생성"""
-    config_content = f"""modules:
+    """청킹 설정 YAML 파일 생성 또는 외부 설정 복사"""
+    config_path = os.path.join(output_dir, "chunk_config.yaml")
+
+    if external_config and os.path.exists(external_config):
+        # 외부 설정 파일 복사
+        import shutil
+        shutil.copy(external_config, config_path)
+        print(f"  외부 chunk config 사용: {external_config}")
+    else:
+        # 기본 Token 청킹 설정 생성
+        config_content = f"""modules:
   - module_type: llama_index_chunk
     chunk_method: Token
     chunk_size: {chunk_size}
     chunk_overlap: {chunk_overlap}
     add_file_name: ko
 """
-    config_path = os.path.join(output_dir, "chunk_config.yaml")
-    with open(config_path, "w") as f:
-        f.write(config_content)
+        with open(config_path, "w") as f:
+            f.write(config_content)
+        print(f"  기본 chunk config 사용: Token (size={chunk_size}, overlap={chunk_overlap})")
+
     return config_path
 
 
-def parse_pdfs(input_dir: str, output_dir: str) -> str:
+def parse_pdfs(input_dir: str, output_dir: str, external_config: str = "") -> str:
     """
     PDF 파일들을 파싱
     Returns: 파싱 결과 parquet 파일 경로
@@ -78,7 +98,7 @@ def parse_pdfs(input_dir: str, output_dir: str) -> str:
     output_dir = os.path.abspath(output_dir)
 
     # Create parse config
-    parse_config = create_parse_config(output_dir)
+    parse_config = create_parse_config(output_dir, external_config)
 
     # Create parser and run
     parse_project_dir = os.path.join(output_dir, "parse_project")
@@ -110,6 +130,7 @@ def chunk_documents(
     output_dir: str,
     chunk_size: int = 512,
     chunk_overlap: int = 50,
+    external_config: str = "",
 ) -> str:
     """
     파싱된 문서를 청크로 분할
@@ -118,7 +139,7 @@ def chunk_documents(
     from autorag.chunker import Chunker
 
     # Create chunk config
-    chunk_config = create_chunk_config(output_dir, chunk_size, chunk_overlap)
+    chunk_config = create_chunk_config(output_dir, chunk_size, chunk_overlap, external_config)
 
     # Create chunker and run
     chunk_project_dir = os.path.join(output_dir, "chunk_project")
@@ -339,6 +360,10 @@ def main():
 
     args = parser.parse_args()
 
+    # 외부 config 파일 경로 초기화
+    parse_config_path = ""
+    chunk_config_path = ""
+
     # 테스트 케이스가 지정되면 설정 파일에서 로드
     if args.testcase:
         from testcase_config import load_testcase
@@ -350,8 +375,14 @@ def main():
         args.use_llm = tc.use_llm
         args.chunk_size = tc.chunk_size
         args.chunk_overlap = tc.chunk_overlap
+        parse_config_path = tc.parse_config
+        chunk_config_path = tc.chunk_config
         print(f"테스트 케이스 로드: {tc.name}")
         print(f"  설명: {tc.description}")
+        if parse_config_path:
+            print(f"  Parse config: {parse_config_path}")
+        if chunk_config_path:
+            print(f"  Chunk config: {chunk_config_path}")
 
     # input_dir 필수 체크
     if not args.input_dir:
@@ -369,13 +400,14 @@ def main():
         print(f"\n[1/3] 기존 파싱 결과 사용: {parsed_path}")
     else:
         print("\n[1/3] PDF 파싱 중...")
-        parsed_path = parse_pdfs(args.input_dir, args.output_dir)
+        parsed_path = parse_pdfs(args.input_dir, args.output_dir, parse_config_path)
 
     # Step 2: Chunk documents
     print("\n[2/3] 문서 청킹 중...")
-    print(f"  청크 크기: {args.chunk_size}, 오버랩: {args.chunk_overlap}")
+    if not chunk_config_path:
+        print(f"  청크 크기: {args.chunk_size}, 오버랩: {args.chunk_overlap}")
     corpus_path, parsed_path = chunk_documents(
-        parsed_path, args.output_dir, args.chunk_size, args.chunk_overlap
+        parsed_path, args.output_dir, args.chunk_size, args.chunk_overlap, chunk_config_path
     )
 
     # Step 3: Generate QA
