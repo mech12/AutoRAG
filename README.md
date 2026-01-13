@@ -70,125 +70,46 @@ direnv allow
 
 ---
 
-## 빠른 테스트 (샘플 데이터)
+## 빠른 시작
 
 ```bash
 # 환경변수 설정
 export OPENAI_API_KEY="your-api-key"
 
-# 샘플 데이터로 RAG 최적화 실행
-autorag evaluate \
-  --config sample_config/rag/korean/non_gpu/simple_korean.yaml \
-  --qa_data_path tests/resources/dataset_sample_gen_by_autorag/qa.parquet \
-  --corpus_data_path tests/resources/dataset_sample_gen_by_autorag/corpus.parquet
+# 샘플 데이터로 빠른 테스트
+make quick-test
+
+# 커스텀 LLM 서버 사용 시 (OpenAI API 키 불필요)
+make quick-test-custom
 
 # 결과 대시보드
-autorag dashboard --trial_dir ./0
+make dashboard
 ```
+
+자세한 내용은 [빠른 테스트 가이드](docs/note-roy/빠른테스트.md) 참조.
 
 ---
 
-## 데이터 생성
-
-### 1. 파싱 설정 (parse_config.yaml)
-
-```yaml
-modules:
-  - module_type: langchain_parse
-    parse_method: pdfminer
-```
-
-### 2. 청킹 설정 (chunk_config.yaml)
-
-```yaml
-modules:
-  - module_type: llama_index_chunk
-    chunk_method: Token
-    chunk_size: 1024
-    chunk_overlap: 24
-    add_file_name: ko
-```
-
-### 3. 데이터 생성 스크립트
-
-```python
-import os
-os.environ["OPENAI_API_KEY"] = "your-api-key"
-
-import pandas as pd
-from llama_index.llms.openai import OpenAI
-from autorag.parser import Parser
-from autorag.chunker import Chunker
-from autorag.data.qa.filter.dontknow import dontknow_filter_rule_based
-from autorag.data.qa.generation_gt.llama_index_gen_gt import make_basic_gen_gt, make_concise_gen_gt
-from autorag.data.qa.schema import Raw, Corpus
-from autorag.data.qa.query.llama_gen_query import factoid_query_gen
-from autorag.data.qa.sample import random_single_hop
-
-# 1. 파싱
-parser = Parser(data_path_glob="data/*")
-parser.start_parsing("parse_config.yaml")
-
-# 2. 청킹
-chunker = Chunker.from_parquet(parsed_data_path="0/parsed.parquet")
-chunker.start_chunking("chunk_config.yaml")
-
-# 3. QA 생성
-llm = OpenAI(model="gpt-4o-mini")
-raw_df = pd.read_parquet("0/parsed.parquet")
-raw_instance = Raw(raw_df)
-
-corpus_df = pd.read_parquet("0/0/corpus.parquet")
-corpus_instance = Corpus(corpus_df, raw_instance)
-
-initial_qa = (
-    corpus_instance.sample(random_single_hop, n=10)
-    .map(lambda df: df.reset_index(drop=True))
-    .make_retrieval_gt_contents()
-    .batch_apply(factoid_query_gen, llm=llm)
-    .batch_apply(make_basic_gen_gt, llm=llm)
-    .batch_apply(make_concise_gen_gt, llm=llm)
-    .filter(dontknow_filter_rule_based, lang="ko")
-)
-
-initial_qa.to_parquet('./qa.parquet', './corpus.parquet')
-```
-
----
-
-## RAG 최적화 실행
+## Make 명령어
 
 ```bash
-# 환경변수 설정
-export OPENAI_API_KEY="your-api-key"
-
-# RAG 최적화 실행
-autorag evaluate \
-  --config sample_config/rag/korean/non_gpu/simple_korean.yaml \
-  --qa_data_path qa.parquet \
-  --corpus_data_path corpus.parquet
-
-# 결과 대시보드
-autorag dashboard --trial_dir ./0
-
-# API 서버 실행
-autorag run_api --trial_dir ./0 --host 0.0.0.0 --port 8000
-
-# 웹 인터페이스 실행
-autorag run_web --trial_path ./0
+make              # 도움말 표시
 ```
-
----
-
-## CLI 명령어
 
 | 명령어 | 설명 |
 |--------|------|
-| `autorag evaluate` | RAG 파이프라인 평가 실행 |
-| `autorag validate` | 설정 파일 유효성 검사 |
-| `autorag dashboard` | 결과 대시보드 실행 |
-| `autorag run_api` | API 서버 실행 |
-| `autorag run_web` | 웹 인터페이스 실행 |
+| `make install` | 기본 설치 |
+| `make install-dev` | 개발 환경 설치 (uv) |
+| `make setup-nltk` | NLTK 데이터 설치 |
+| `make lint` | ruff 린터 실행 |
+| `make format` | ruff 포맷터 실행 |
+| `make test` | 전체 테스트 실행 |
+| `make quick-test` | 샘플 데이터로 RAG 평가 |
+| `make quick-test-custom` | 커스텀 LLM 서버로 평가 |
+| `make dashboard` | 결과 대시보드 (7690) |
+| `make api` | API 서버 (8000) |
+| `make web` | 웹 인터페이스 |
+| `make clean` | 결과/캐시 삭제 |
 
 ---
 

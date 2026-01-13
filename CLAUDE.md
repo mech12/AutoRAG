@@ -8,6 +8,10 @@ AutoRAG is a RAG (Retrieval-Augmented Generation) AutoML tool that automatically
 
 ## Development Commands
 
+### git commit 하기전
+
+수정사항을 CHANGELOG.md에 추가하자.
+
 ### Installation
 ```bash
 # Using UV (recommended)
