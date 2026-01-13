@@ -36,7 +36,7 @@ vectordb:
     collection_name: ${MILVUS_COLLECTION_NAME}
     embedding_batch: 100
     similarity_metric: cosine
-    index_type: IVF_FLAT
+    index_type: AUTOINDEX
 
     # 임베딩 모델 설정
     embedding_model:
