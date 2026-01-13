@@ -3,10 +3,14 @@
 커스텀 PDF 데이터를 AutoRAG 평가용 데이터셋으로 변환하는 스크립트
 
 사용법:
+    # 직접 경로 지정
     python scripts/prepare_custom_data.py \
         --input_dir docs/sample-data \
         --output_dir data/custom \
         --num_qa 20
+
+    # 테스트 케이스 사용
+    python scripts/prepare_custom_data.py --testcase 인사규정
 
 환경변수 (.env에서 로드):
     - CUSTOM_LLM_API_BASE: LLM 서버 URL
@@ -45,13 +49,15 @@ def create_parse_config(output_dir: str) -> str:
     return config_path
 
 
-def create_chunk_config(output_dir: str) -> str:
+def create_chunk_config(
+    output_dir: str, chunk_size: int = 512, chunk_overlap: int = 50
+) -> str:
     """청킹 설정 YAML 파일 생성"""
-    config_content = """modules:
+    config_content = f"""modules:
   - module_type: llama_index_chunk
     chunk_method: Token
-    chunk_size: 512
-    chunk_overlap: 50
+    chunk_size: {chunk_size}
+    chunk_overlap: {chunk_overlap}
     add_file_name: ko
 """
     config_path = os.path.join(output_dir, "chunk_config.yaml")
@@ -99,7 +105,12 @@ def parse_pdfs(input_dir: str, output_dir: str) -> str:
     return parsed_path
 
 
-def chunk_documents(parsed_path: str, output_dir: str) -> str:
+def chunk_documents(
+    parsed_path: str,
+    output_dir: str,
+    chunk_size: int = 512,
+    chunk_overlap: int = 50,
+) -> str:
     """
     파싱된 문서를 청크로 분할
     Returns: corpus parquet 파일 경로
@@ -107,7 +118,7 @@ def chunk_documents(parsed_path: str, output_dir: str) -> str:
     from autorag.chunker import Chunker
 
     # Create chunk config
-    chunk_config = create_chunk_config(output_dir)
+    chunk_config = create_chunk_config(output_dir, chunk_size, chunk_overlap)
 
     # Create chunker and run
     chunk_project_dir = os.path.join(output_dir, "chunk_project")
@@ -263,9 +274,13 @@ def main():
         description="Convert PDF files to AutoRAG evaluation dataset"
     )
     parser.add_argument(
+        "--testcase",
+        type=str,
+        help="테스트 케이스 이름 (scripts/test-config.yaml에서 로드)",
+    )
+    parser.add_argument(
         "--input_dir",
         type=str,
-        required=True,
         help="Directory containing PDF files",
     )
     parser.add_argument(
@@ -279,6 +294,18 @@ def main():
         type=int,
         default=20,
         help="Number of QA pairs to generate (default: 20)",
+    )
+    parser.add_argument(
+        "--chunk_size",
+        type=int,
+        default=512,
+        help="Chunk size in tokens (default: 512)",
+    )
+    parser.add_argument(
+        "--chunk_overlap",
+        type=int,
+        default=50,
+        help="Chunk overlap in tokens (default: 50)",
     )
     parser.add_argument(
         "--use_llm",
@@ -298,6 +325,24 @@ def main():
 
     args = parser.parse_args()
 
+    # 테스트 케이스가 지정되면 설정 파일에서 로드
+    if args.testcase:
+        from testcase_config import load_testcase
+
+        tc = load_testcase(args.testcase)
+        args.input_dir = tc.input_dir
+        args.output_dir = tc.data_dir
+        args.num_qa = tc.num_qa
+        args.use_llm = tc.use_llm
+        args.chunk_size = tc.chunk_size
+        args.chunk_overlap = tc.chunk_overlap
+        print(f"테스트 케이스 로드: {tc.name}")
+        print(f"  설명: {tc.description}")
+
+    # input_dir 필수 체크
+    if not args.input_dir:
+        parser.error("--input_dir 또는 --testcase가 필요합니다.")
+
     print("=" * 60)
     print("AutoRAG 커스텀 데이터 준비")
     print("=" * 60)
@@ -314,7 +359,10 @@ def main():
 
     # Step 2: Chunk documents
     print("\n[2/3] 문서 청킹 중...")
-    corpus_path, parsed_path = chunk_documents(parsed_path, args.output_dir)
+    print(f"  청크 크기: {args.chunk_size}, 오버랩: {args.chunk_overlap}")
+    corpus_path, parsed_path = chunk_documents(
+        parsed_path, args.output_dir, args.chunk_size, args.chunk_overlap
+    )
 
     # Step 3: Generate QA
     if not args.skip_qa:
@@ -332,7 +380,10 @@ def main():
     if not args.skip_qa:
         print(f"  - {args.output_dir}/qa.parquet")
     print(f"\n평가 실행:")
-    print(f"  make evaluate-custom")
+    if args.testcase:
+        print(f"  make evaluate-custom TESTCASE={args.testcase}")
+    else:
+        print(f"  make evaluate-custom")
 
 
 if __name__ == "__main__":

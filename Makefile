@@ -1,6 +1,7 @@
 .PHONY: help install install-dev setup-nltk lint format check test test-clean \
         quick-test quick-test-custom prepare-data evaluate evaluate-custom \
-        help-prepare-data help-evaluate-custom dashboard api web validate clean
+        help-prepare-data help-evaluate-custom dashboard api web validate clean \
+        list-testcases run-testcase compare-results help-testcase
 
 # Default target
 .DEFAULT_GOAL := help
@@ -79,13 +80,25 @@ quick-test-custom: ## Run RAG evaluation with custom LLM server (requires .env)
 		--project_dir $(PROJECT_DIR)
 
 ##@ Data Preparation
-prepare-data: ## Prepare custom PDF data for evaluation (requires input_dir)
-	@if [ -z "$(INPUT_DIR)" ]; then echo "Usage: make prepare-data INPUT_DIR=/path/to/pdfs [OUTPUT_DIR=data/custom] [NUM_QA=20] [USE_LLM=false]"; exit 1; fi
+prepare-data: ## Prepare custom PDF data (TESTCASE or INPUT_DIR)
+ifdef TESTCASE
+	$(PYTHON) scripts/prepare_custom_data.py --testcase $(TESTCASE)
+else ifdef INPUT_DIR
 	$(PYTHON) scripts/prepare_custom_data.py \
 		--input_dir $(INPUT_DIR) \
 		--output_dir $(or $(OUTPUT_DIR),data/custom) \
 		--num_qa $(or $(NUM_QA),20) \
+		--chunk_size $(or $(CHUNK_SIZE),512) \
+		--chunk_overlap $(or $(CHUNK_OVERLAP),50) \
 		$(if $(filter true,$(USE_LLM)),--use_llm,)
+else
+	@echo "Usage:"
+	@echo "  make prepare-data TESTCASE=<name>        # 테스트 케이스 사용"
+	@echo "  make prepare-data INPUT_DIR=<path>      # 직접 경로 지정"
+	@echo ""
+	@echo "테스트 케이스 목록: make list-testcases"
+	@exit 1
+endif
 
 help-prepare-data: ## Show detailed help for prepare-data
 	@echo ""
@@ -138,7 +151,11 @@ evaluate: ## Run RAG evaluation with custom data (qa.parquet, corpus.parquet)
 		--corpus_data_path $(CORPUS_DATA) \
 		--project_dir $(PROJECT_DIR)
 
-evaluate-custom: ## Run RAG evaluation with prepared custom data (data/custom/)
+evaluate-custom: ## Run RAG evaluation (TESTCASE or data/custom/)
+ifdef TESTCASE
+	@if [ ! -f .env ]; then echo "Error: .env file not found. Copy .env.example to .env first."; exit 1; fi
+	$(PYTHON) scripts/run_evaluation.py --testcase $(TESTCASE)
+else
 	@if [ ! -f .env ]; then echo "Error: .env file not found. Copy .env.example to .env first."; exit 1; fi
 	@if [ ! -f data/custom/qa.parquet ]; then echo "Error: data/custom/qa.parquet not found. Run 'make prepare-data' first."; exit 1; fi
 	autorag evaluate \
@@ -146,6 +163,7 @@ evaluate-custom: ## Run RAG evaluation with prepared custom data (data/custom/)
 		--qa_data_path data/custom/qa.parquet \
 		--corpus_data_path data/custom/corpus.parquet \
 		--project_dir $(PROJECT_DIR)
+endif
 
 help-evaluate-custom: ## Show detailed help for evaluate-custom
 	@echo ""
@@ -203,6 +221,56 @@ validate: ## Validate config file
 		--qa_data_path $(QA_DATA) \
 		--corpus_data_path $(CORPUS_DATA) \
 		--project_dir $(PROJECT_DIR)
+
+##@ Test Cases
+list-testcases: ## List all available test cases
+	@$(PYTHON) scripts/testcase_config.py
+
+run-testcase: ## Run full workflow for a test case (TESTCASE required)
+	@if [ -z "$(TESTCASE)" ]; then echo "Usage: make run-testcase TESTCASE=<name>"; echo ""; $(PYTHON) scripts/testcase_config.py; exit 1; fi
+	$(MAKE) prepare-data TESTCASE=$(TESTCASE)
+	$(MAKE) evaluate-custom TESTCASE=$(TESTCASE)
+
+compare-results: ## Compare all test case results
+	@$(PYTHON) scripts/compare_results.py
+
+help-testcase: ## Show detailed help for test cases
+	@echo ""
+	@echo "\033[1m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+	@echo "\033[1m  테스트 케이스 기반 RAG 평가 시스템\033[0m"
+	@echo "\033[1m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+	@echo ""
+	@echo "\033[33m사용 가능한 명령어:\033[0m"
+	@echo "  \033[36mmake list-testcases\033[0m           테스트 케이스 목록 확인"
+	@echo "  \033[36mmake run-testcase TESTCASE=<name>\033[0m  전체 워크플로우 실행"
+	@echo "  \033[36mmake prepare-data TESTCASE=<name>\033[0m 데이터 준비만 실행"
+	@echo "  \033[36mmake evaluate-custom TESTCASE=<name>\033[0m 평가만 실행"
+	@echo "  \033[36mmake compare-results\033[0m          모든 결과 비교"
+	@echo ""
+	@echo "\033[33m설정 파일:\033[0m"
+	@echo "  scripts/test-config.yaml"
+	@echo ""
+	@echo "\033[33m예제:\033[0m"
+	@echo "  # 인사규정 테스트 케이스 실행"
+	@echo "  make run-testcase TESTCASE=인사규정"
+	@echo ""
+	@echo "  # 고압가스 테스트 케이스 실행 (큰 청크 사용)"
+	@echo "  make run-testcase TESTCASE=고압가스"
+	@echo ""
+	@echo "  # 결과 비교"
+	@echo "  make compare-results"
+	@echo ""
+	@echo "\033[33m출력 폴더 구조:\033[0m"
+	@echo "  logs/<TESTCASE>/"
+	@echo "  ├── data/              # 준비된 데이터"
+	@echo "  │   ├── corpus.parquet"
+	@echo "  │   └── qa.parquet"
+	@echo "  └── trial/             # 평가 결과"
+	@echo "      └── 0/summary.csv"
+	@echo ""
+	@echo "\033[33m테스트 케이스 추가:\033[0m"
+	@echo "  scripts/test-config.yaml 파일을 편집하세요"
+	@echo ""
 
 ##@ Deployment
 dashboard: ## Start result dashboard (port 7690)
