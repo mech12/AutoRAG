@@ -11,7 +11,7 @@ export
 
 # Variables
 VENV := .venv
-PYTHON := python
+PYTHON := $(if $(wildcard $(VENV)/bin/python),$(VENV)/bin/python,python)
 PROJECT_DIR := logs
 TRIAL_DIR := logs/0
 CONFIG := sample_config/rag/korean/non_gpu/simple_korean.yaml
@@ -81,7 +81,7 @@ quick-test-custom: ## Run RAG evaluation with custom LLM server (requires .env)
 ##@ Data Preparation
 prepare-data: ## Prepare custom PDF data for evaluation (requires input_dir)
 	@if [ -z "$(INPUT_DIR)" ]; then echo "Usage: make prepare-data INPUT_DIR=/path/to/pdfs [OUTPUT_DIR=data/custom] [NUM_QA=20] [USE_LLM=false]"; exit 1; fi
-	python scripts/prepare_custom_data.py \
+	$(PYTHON) scripts/prepare_custom_data.py \
 		--input_dir $(INPUT_DIR) \
 		--output_dir $(or $(OUTPUT_DIR),data/custom) \
 		--num_qa $(or $(NUM_QA),20) \

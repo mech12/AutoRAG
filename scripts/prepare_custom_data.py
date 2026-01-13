@@ -67,13 +67,20 @@ def parse_pdfs(input_dir: str, output_dir: str) -> str:
     """
     from autorag.parser import Parser
 
+    # Convert to absolute paths
+    input_dir = os.path.abspath(input_dir)
+    output_dir = os.path.abspath(output_dir)
+
     # Create parse config
     parse_config = create_parse_config(output_dir)
 
     # Create parser and run
     parse_project_dir = os.path.join(output_dir, "parse_project")
+    data_glob = os.path.join(input_dir, "*.pdf")
+    print(f"Searching for PDFs: {data_glob}")
+
     parser = Parser(
-        data_path_glob=os.path.join(input_dir, "**/*.pdf"),
+        data_path_glob=data_glob,
         project_dir=parse_project_dir,
     )
     parser.start_parsing(parse_config)
