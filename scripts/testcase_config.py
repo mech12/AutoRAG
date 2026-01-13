@@ -21,6 +21,8 @@ class TestCase:
     chunk_overlap: int = 50
     recursive: bool = False
     rag_config: str = "sample_config/rag/korean/non_gpu/simple_korean_custom.yaml"
+    parse_config: str = ""  # 외부 parse config 파일 경로 (비어있으면 기본 pdfminer 사용)
+    chunk_config: str = ""  # 외부 chunk config 파일 경로 (비어있으면 기본 Token 사용)
     env: dict = field(default_factory=dict)
 
     @property
@@ -96,6 +98,8 @@ if __name__ == "__main__":
         print(f"Use LLM: {tc.use_llm}")
         print(f"Chunk size: {tc.chunk_size}")
         print(f"Chunk overlap: {tc.chunk_overlap}")
+        print(f"Parse config: {tc.parse_config or '(기본: pdfminer)'}")
+        print(f"Chunk config: {tc.chunk_config or '(기본: Token)'}")
     else:
         # 테스트 케이스 목록 출력 (copy & paste 가능한 명령어 포함)
         print("=" * 60)
