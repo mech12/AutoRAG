@@ -1,7 +1,7 @@
 .PHONY: help install install-dev setup-nltk lint format check test test-clean \
         quick-test quick-test-custom prepare-data evaluate evaluate-custom \
         help-prepare-data help-evaluate-custom dashboard api web validate clean \
-        list-testcases run-testcase compare-results help-testcase \
+        list-testcases show-testcase run-testcase compare-results help-testcase \
         multi-dashboard multi-web
 
 # Default target
@@ -226,6 +226,10 @@ validate: ## Validate config file
 ##@ Test Cases
 list-testcases: ## List all available test cases
 	@$(PYTHON) scripts/testcase_config.py
+
+show-testcase: ## Show QA data for a test case
+	@if [ -z "$(TESTCASE)" ]; then echo "Usage: make show-testcase TESTCASE=<name>"; echo ""; $(PYTHON) scripts/testcase_config.py; exit 1; fi
+	@$(PYTHON) scripts/show_testcase.py $(TESTCASE)
 
 run-testcase: ## Run full workflow (= prepare-data + evaluate-custom)
 	@if [ -z "$(TESTCASE)" ]; then echo "Usage: make run-testcase TESTCASE=<name>"; echo ""; $(PYTHON) scripts/testcase_config.py; exit 1; fi

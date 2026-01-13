@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- Add `make show-testcase TESTCASE=<name>` command to display QA data
 - Add documentation for QA generation methods and test results
 
 ## 2026-01-08
