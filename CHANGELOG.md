@@ -8,6 +8,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Fix doc_id mismatch error in VectorDB after validation
+  - Validation creates sample data in collections which caused doc_id not found errors
+  - Added automatic VectorDB collection cleanup after validation completes
+  - Supports Weaviate, Milvus, Qdrant, and Chroma cleanup
+- Fix Chroma HTTP client: Change AsyncHttpClient to HttpClient for compatibility
+
+### Added
+
+- Add documentation for QA generation methods and test results
+
 ## 2026-01-08
 
 ### Installation (Server: Ubuntu 24.04, Python 3.12.3)

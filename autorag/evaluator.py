@@ -40,6 +40,102 @@ from autorag.vectordb import load_all_vectordb_from_yaml
 
 logger = logging.getLogger("AutoRAG")
 
+
+def _cleanup_vectordb_collections(yaml_path: str):
+	"""
+	Clean up vector DB collections after validation.
+	This is necessary because validation creates sample data in the collections,
+	which would cause doc_id mismatch errors during the main evaluation.
+	"""
+	yaml_dict = load_yaml_config(yaml_path)
+	vectordb_configs = yaml_dict.get("vectordb", [])
+
+	for config in vectordb_configs:
+		db_type = config.get("db_type", "").lower()
+
+		if db_type == "weaviate":
+			_cleanup_weaviate_collection(config)
+		elif db_type == "milvus":
+			_cleanup_milvus_collection(config)
+		elif db_type == "qdrant":
+			_cleanup_qdrant_collection(config)
+		# Chroma, Pinecone, Couchbase can be added similarly if needed
+
+
+def _cleanup_weaviate_collection(config: dict):
+	"""Clean up Weaviate collection."""
+	try:
+		import weaviate
+
+		host = os.path.expandvars(config.get("host", "localhost"))
+		port = int(os.path.expandvars(str(config.get("port", 8080))))
+		grpc_port = int(os.path.expandvars(str(config.get("grpc_port", 50051))))
+		collection_name = config.get("collection_name", "autorag_collection")
+
+		client = weaviate.connect_to_local(
+			host=host,
+			port=port,
+			grpc_port=grpc_port,
+		)
+
+		# Weaviate capitalizes the first letter of collection names
+		capitalized_name = collection_name[0].upper() + collection_name[1:]
+
+		if client.collections.exists(capitalized_name):
+			client.collections.delete(capitalized_name)
+			logger.info(f"Cleaned up Weaviate collection: {capitalized_name}")
+
+		client.close()
+	except Exception as e:
+		logger.warning(f"Failed to cleanup Weaviate collection: {e}")
+
+
+def _cleanup_milvus_collection(config: dict):
+	"""Clean up Milvus collection."""
+	try:
+		from pymilvus import connections, utility
+
+		uri = os.path.expandvars(config.get("uri", "http://localhost:19530"))
+		collection_name = config.get("collection_name", "autorag_collection")
+		user = os.path.expandvars(config.get("user", ""))
+		password = os.path.expandvars(config.get("password", ""))
+		db_name = os.path.expandvars(config.get("db_name", "default"))
+
+		connections.connect("default", uri=uri, user=user, password=password, db_name=db_name)
+
+		if utility.has_collection(collection_name):
+			utility.drop_collection(collection_name)
+			logger.info(f"Cleaned up Milvus collection: {collection_name}")
+
+		connections.disconnect("default")
+	except Exception as e:
+		logger.warning(f"Failed to cleanup Milvus collection: {e}")
+
+
+def _cleanup_qdrant_collection(config: dict):
+	"""Clean up Qdrant collection."""
+	try:
+		from qdrant_client import QdrantClient
+
+		url = os.path.expandvars(config.get("url"))
+		api_key = os.path.expandvars(config.get("api_key")) if config.get("api_key") else None
+		host = os.path.expandvars(config.get("host"))
+		collection_name = config.get("collection_name", "autorag_collection")
+
+		if url:
+			client = QdrantClient(url=url, api_key=api_key)
+		else:
+			port = int(os.path.expandvars(str(config.get("port", 6333))))
+			client = QdrantClient(host=host, port=port, api_key=api_key)
+
+		if client.collection_exists(collection_name):
+			client.delete_collection(collection_name)
+			logger.info(f"Cleaned up Qdrant collection: {collection_name}")
+
+		client.close()
+	except Exception as e:
+		logger.warning(f"Failed to cleanup Qdrant collection: {e}")
+
 ascii_art = """
                 _        _____            _____
      /\        | |      |  __ \     /\   / ____|
@@ -139,6 +235,12 @@ class Evaluator:
 				qa_data_path=self.qa_data_path, corpus_data_path=self.corpus_data_path
 			)
 			validator.validate(yaml_path)
+
+			# Clean up vector DB collections after validation
+			# Validation creates sample data in the collections which would cause
+			# doc_id mismatch errors during the main evaluation
+			logger.info("Cleaning up vector DB collections after validation...")
+			_cleanup_vectordb_collections(yaml_path)
 
 		os.environ["PROJECT_DIR"] = self.project_dir
 

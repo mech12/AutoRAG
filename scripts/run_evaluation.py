@@ -74,6 +74,37 @@ def _delete_weaviate_collection_if_exists(collection_name: str, env: dict) -> bo
     return False
 
 
+def _delete_chroma_collection_if_exists(collection_name: str, env: dict) -> bool:
+    """
+    Chroma HTTP 컬렉션이 존재하면 삭제.
+    데이터가 재생성되었을 때 기존 컬렉션의 doc_id 불일치 문제를 방지.
+    """
+    try:
+        import chromadb
+
+        chroma_host = env.get("CHROMA_HOST")
+        chroma_port = env.get("CHROMA_PORT")
+
+        if not chroma_host or not chroma_port:
+            return False
+
+        client = chromadb.HttpClient(host=chroma_host, port=int(chroma_port))
+
+        # 컬렉션 목록 확인
+        collections = client.list_collections()
+        collection_names = [c.name for c in collections]
+
+        if collection_name in collection_names:
+            client.delete_collection(collection_name)
+            print(f"  기존 Chroma 컬렉션 삭제: {collection_name}")
+            return True
+
+    except Exception as e:
+        print(f"  Chroma 컬렉션 삭제 중 오류 (무시됨): {e}")
+
+    return False
+
+
 def _delete_milvus_collection_if_exists(collection_name: str, env: dict) -> bool:
     """
     Milvus 컬렉션이 존재하면 삭제.
@@ -183,6 +214,7 @@ def run_evaluation(testcase: str):
     # Vector DB 컬렉션 관리 (doc_id 불일치 방지)
     is_milvus_config = "milvus" in tc.rag_config.lower()
     is_weaviate_config = "weaviate" in tc.rag_config.lower()
+    is_chroma_http_config = "chroma_http" in tc.rag_config.lower()
 
     # Milvus 컬렉션 이름 동적 생성 (Milvus 설정 파일 사용 시에만)
     # MILVUS_COLLECTION_NAME_PREFIX가 설정되어 있으면 테스트케이스별 컬렉션 생성
@@ -203,6 +235,12 @@ def run_evaluation(testcase: str):
         # Weaviate 설정 파일에서 collection_name 기본값: autorag_collection
         weaviate_collection = "autorag_collection"
         _delete_weaviate_collection_if_exists(weaviate_collection, env)
+
+    # Chroma HTTP 컬렉션 삭제 (기존 doc_id 불일치 방지)
+    if is_chroma_http_config:
+        # Chroma HTTP 설정 파일에서 collection_name 기본값: autorag_collection
+        chroma_collection = "autorag_collection"
+        _delete_chroma_collection_if_exists(chroma_collection, env)
 
     # Build command
     cmd = [
