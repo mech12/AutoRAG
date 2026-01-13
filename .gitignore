@@ -167,3 +167,5 @@ projects/tutorial_1
 
 .vscode/
 .claude/
+.envrc
+data/
