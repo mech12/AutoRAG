@@ -110,9 +110,6 @@ if __name__ == "__main__":
         for name, desc in list_testcases():
             print(f"[{name}] {desc}")
             print(f"  make run-testcase TESTCASE={name}")
-            print(f"  make prepare-data TESTCASE={name}")
-            print(f"  make evaluate-custom TESTCASE={name}")
-            print(f"  make show-testcase TESTCASE={name}")
             print()
 
         print("-" * 60)
