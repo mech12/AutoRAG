@@ -1,7 +1,8 @@
 .PHONY: help install install-dev setup-nltk lint format check test test-clean \
         quick-test quick-test-custom prepare-data evaluate evaluate-custom \
         help-prepare-data help-evaluate-custom dashboard api web validate clean \
-        list-testcases run-testcase compare-results help-testcase
+        list-testcases run-testcase compare-results help-testcase \
+        multi-dashboard multi-web
 
 # Default target
 .DEFAULT_GOAL := help
@@ -281,6 +282,12 @@ api: ## Start API server (0.0.0.0:8000)
 
 web: ## Start web interface
 	autorag run_web --trial_path $(TRIAL_DIR)
+
+multi-dashboard: ## Start multi-testcase dashboard (port 7690)
+	$(PYTHON) scripts/multi_dashboard.py --port $(DASHBOARD_PORT)
+
+multi-web: ## Start multi-testcase web interface (port 8501)
+	streamlit run scripts/multi_web.py
 
 ##@ Cleanup
 clean: ## Remove trial results and cache
