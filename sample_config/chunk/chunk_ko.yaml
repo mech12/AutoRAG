@@ -16,4 +16,4 @@ modules:
     chunk_method: [ SimpleFile ]
     add_file_name: ko
   - module_type: langchain_chunk
-    chunk_method: KonlpyTextSplitter
+    chunk_method: konlpy
