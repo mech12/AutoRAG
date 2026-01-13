@@ -151,7 +151,7 @@ class Weaviate(BaseVectorStore):
 				return_metadata=MetadataQuery(distance=True),
 			)
 
-			ids.append([o.uuid for o in response.objects])
+			ids.append([str(o.uuid) for o in response.objects])
 			scores.append(
 				[
 					distance_to_score(o.metadata.distance, self.similarity_metric)
