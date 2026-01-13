@@ -3,7 +3,7 @@
 # =============================================================================
 # 사용법:
 #   make list-testcases                    # 테스트 케이스 목록
-#   make run-testcase TESTCASE=인사규정    # 전체 워크플로우 실행
+#   make run-testcase TESTCASE=hr_rule     # 전체 워크플로우 실행
 # =============================================================================
 
 # 기본값 (테스트 케이스에서 생략 시 적용)
@@ -17,35 +17,35 @@ defaults:
 # 테스트 케이스 정의
 test_cases:
   # -------------------------------------------------------------------------
-  # 인사규정 테스트 케이스
+  # 인사규정 (HR Rules) 테스트 케이스
   # -------------------------------------------------------------------------
-  인사규정:
+  hr_rule:
     description: "취업규칙 PDF 기반 RAG 테스트"
     input_dir: "docs/sample-data/인사규정"
-    output_dir: "logs/testCase/인사규정"
+    output_dir: "logs/testCase/hr_rule"
     # 기본값 사용: num_qa=20, use_llm=false, chunk_size=512
 
-  인사규정_llm:
+  hr_rule_llm:
     description: "취업규칙 - LLM 사용 고품질 QA 생성"
     input_dir: "docs/sample-data/인사규정"
-    output_dir: "logs/testCase/인사규정_llm"
+    output_dir: "logs/testCase/hr_rule_llm"
     num_qa: 50
     use_llm: true
 
   # -------------------------------------------------------------------------
-  # 고압가스 테스트 케이스
+  # 고압가스 (Gas Safety) 테스트 케이스
   # -------------------------------------------------------------------------
-  고압가스:
+  gas_safety:
     description: "특수고압가스 기술기준 PDF 기반 RAG 테스트"
     input_dir: "docs/sample-data/고압가스"
-    output_dir: "logs/testCase/고압가스"
+    output_dir: "logs/testCase/gas_safety"
     chunk_size: 1024
     chunk_overlap: 100
 
-  고압가스_상세:
+  gas_safety_detail:
     description: "고압가스 - 더 많은 QA 생성"
     input_dir: "docs/sample-data/고압가스"
-    output_dir: "logs/testCase/고압가스_상세"
+    output_dir: "logs/testCase/gas_safety_detail"
     num_qa: 100
     use_llm: true
     chunk_size: 1024
@@ -54,9 +54,74 @@ test_cases:
   # -------------------------------------------------------------------------
   # 전체 테스트 케이스 (모든 샘플 데이터)
   # -------------------------------------------------------------------------
-  전체:
+  all:
     description: "모든 샘플 PDF 통합 테스트"
     input_dir: "docs/sample-data"
-    output_dir: "logs/testCase/전체"
+    output_dir: "logs/testCase/all"
     num_qa: 100
     recursive: true
+
+  # -------------------------------------------------------------------------
+  # Vector DB 비교 테스트 (인사규정 기준)
+  # -------------------------------------------------------------------------
+  # 동일한 데이터로 각 Vector DB 성능 비교
+  # 환경변수 필요: export $(cat .env | xargs)
+
+  hr_rule_milvus:
+    description: "인사규정 - Milvus Vector DB"
+    input_dir: "docs/sample-data/인사규정"
+    output_dir: "logs/testCase/hr_rule_milvus"
+    rag_config: "sample_config/rag/korean/non_gpu/simple_korean_milvus.yaml"
+
+  hr_rule_weaviate:
+    description: "인사규정 - Weaviate Vector DB"
+    input_dir: "docs/sample-data/인사규정"
+    output_dir: "logs/testCase/hr_rule_weaviate"
+    rag_config: "sample_config/rag/korean/non_gpu/simple_korean_weaviate.yaml"
+
+  hr_rule_qdrant:
+    description: "인사규정 - Qdrant Vector DB"
+    input_dir: "docs/sample-data/인사규정"
+    output_dir: "logs/testCase/hr_rule_qdrant"
+    rag_config: "sample_config/rag/korean/non_gpu/simple_korean_qdrant.yaml"
+
+  hr_rule_chroma_http:
+    description: "인사규정 - Chroma HTTP Vector DB"
+    input_dir: "docs/sample-data/인사규정"
+    output_dir: "logs/testCase/hr_rule_chroma_http"
+    rag_config: "sample_config/rag/korean/non_gpu/simple_korean_chroma_http.yaml"
+
+  # -------------------------------------------------------------------------
+  # Vector DB 비교 테스트 (고압가스 기준)
+  # -------------------------------------------------------------------------
+  gas_safety_milvus:
+    description: "고압가스 - Milvus Vector DB"
+    input_dir: "docs/sample-data/고압가스"
+    output_dir: "logs/testCase/gas_safety_milvus"
+    chunk_size: 1024
+    chunk_overlap: 100
+    rag_config: "sample_config/rag/korean/non_gpu/simple_korean_milvus.yaml"
+
+  gas_safety_weaviate:
+    description: "고압가스 - Weaviate Vector DB"
+    input_dir: "docs/sample-data/고압가스"
+    output_dir: "logs/testCase/gas_safety_weaviate"
+    chunk_size: 1024
+    chunk_overlap: 100
+    rag_config: "sample_config/rag/korean/non_gpu/simple_korean_weaviate.yaml"
+
+  gas_safety_qdrant:
+    description: "고압가스 - Qdrant Vector DB"
+    input_dir: "docs/sample-data/고압가스"
+    output_dir: "logs/testCase/gas_safety_qdrant"
+    chunk_size: 1024
+    chunk_overlap: 100
+    rag_config: "sample_config/rag/korean/non_gpu/simple_korean_qdrant.yaml"
+
+  gas_safety_chroma_http:
+    description: "고압가스 - Chroma HTTP Vector DB"
+    input_dir: "docs/sample-data/고압가스"
+    output_dir: "logs/testCase/gas_safety_chroma_http"
+    chunk_size: 1024
+    chunk_overlap: 100
+    rag_config: "sample_config/rag/korean/non_gpu/simple_korean_chroma_http.yaml"
