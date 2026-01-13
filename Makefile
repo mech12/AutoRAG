@@ -261,7 +261,7 @@ help-testcase: ## Show detailed help for test cases
 	@echo "  make compare-results"
 	@echo ""
 	@echo "\033[33m출력 폴더 구조:\033[0m"
-	@echo "  logs/<TESTCASE>/"
+	@echo "  logs/testCase/<TESTCASE>/"
 	@echo "  ├── data/              # 준비된 데이터"
 	@echo "  │   ├── corpus.parquet"
 	@echo "  │   └── qa.parquet"

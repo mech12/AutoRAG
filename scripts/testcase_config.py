@@ -97,7 +97,19 @@ if __name__ == "__main__":
         print(f"Chunk size: {tc.chunk_size}")
         print(f"Chunk overlap: {tc.chunk_overlap}")
     else:
-        # 테스트 케이스 목록 출력
-        print("Available test cases:")
+        # 테스트 케이스 목록 출력 (copy & paste 가능한 명령어 포함)
+        print("=" * 60)
+        print("사용 가능한 테스트 케이스")
+        print("=" * 60)
+        print()
+
         for name, desc in list_testcases():
-            print(f"  - {name:15} : {desc}")
+            print(f"[{name}] {desc}")
+            print(f"  make run-testcase TESTCASE={name}")
+            print(f"  make prepare-data TESTCASE={name}")
+            print(f"  make evaluate-custom TESTCASE={name}")
+            print()
+
+        print("-" * 60)
+        print("결과 비교: make compare-results")
+        print("도움말:    make help-testcase")

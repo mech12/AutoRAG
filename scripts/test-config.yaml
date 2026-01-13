@@ -22,13 +22,13 @@ test_cases:
   인사규정:
     description: "취업규칙 PDF 기반 RAG 테스트"
     input_dir: "docs/sample-data/인사규정"
-    output_dir: "logs/인사규정"
+    output_dir: "logs/testCase/인사규정"
     # 기본값 사용: num_qa=20, use_llm=false, chunk_size=512
 
   인사규정_llm:
     description: "취업규칙 - LLM 사용 고품질 QA 생성"
     input_dir: "docs/sample-data/인사규정"
-    output_dir: "logs/인사규정_llm"
+    output_dir: "logs/testCase/인사규정_llm"
     num_qa: 50
     use_llm: true
 
@@ -38,14 +38,14 @@ test_cases:
   고압가스:
     description: "특수고압가스 기술기준 PDF 기반 RAG 테스트"
     input_dir: "docs/sample-data/고압가스"
-    output_dir: "logs/고압가스"
+    output_dir: "logs/testCase/고압가스"
     chunk_size: 1024
     chunk_overlap: 100
 
   고압가스_상세:
     description: "고압가스 - 더 많은 QA 생성"
     input_dir: "docs/sample-data/고압가스"
-    output_dir: "logs/고압가스_상세"
+    output_dir: "logs/testCase/고압가스_상세"
     num_qa: 100
     use_llm: true
     chunk_size: 1024
@@ -57,6 +57,6 @@ test_cases:
   전체:
     description: "모든 샘플 PDF 통합 테스트"
     input_dir: "docs/sample-data"
-    output_dir: "logs/전체"
+    output_dir: "logs/testCase/전체"
     num_qa: 100
     recursive: true
