@@ -136,15 +136,21 @@ def main():
             with st.spinner("답변 생성 중..."):
                 try:
                     result = st.session_state.runner.run(query)
-                    answer = result.get("answer", "응답을 생성할 수 없습니다.")
 
-                    # 검색된 문서 정보
-                    retrieved_docs = result.get("retrieved_contents", [])
-                    if retrieved_docs:
-                        answer += "\n\n---\n**참조 문서:**\n"
-                        for i, doc in enumerate(retrieved_docs[:3], 1):
-                            doc_preview = doc[:200] + "..." if len(doc) > 200 else doc
-                            answer += f"\n{i}. {doc_preview}\n"
+                    # result가 문자열이면 직접 사용, 딕셔너리면 answer 키 추출
+                    if isinstance(result, str):
+                        answer = result
+                    elif isinstance(result, dict):
+                        answer = result.get("answer", "응답을 생성할 수 없습니다.")
+                        # 검색된 문서 정보
+                        retrieved_docs = result.get("retrieved_contents", [])
+                        if retrieved_docs:
+                            answer += "\n\n---\n**참조 문서:**\n"
+                            for i, doc in enumerate(retrieved_docs[:3], 1):
+                                doc_preview = doc[:200] + "..." if len(doc) > 200 else doc
+                                answer += f"\n{i}. {doc_preview}\n"
+                    else:
+                        answer = str(result)
 
                     st.markdown(answer)
                     st.session_state.messages.append(
