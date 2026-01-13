@@ -1,0 +1,54 @@
+# 커스텀 LLM/임베딩 서버 사용 설정 (OpenAI API 키 불필요)
+# LLM 서버: https://llmserving.surromind.ai
+# 임베딩 서버: http://10.10.20.94:8081 (BGE-M3 Infinity)
+
+vectordb:
+  - name: custom_vectordb
+    db_type: chroma
+    client_type: persistent
+    path: ${PROJECT_DIR}/logs/chroma
+    collection_name: custom_collection
+    embedding_batch: 100
+    embedding_model:
+      - type: openai_like
+        model_name: BAAI/bge-m3
+        api_base: http://10.10.20.94:8081
+
+node_lines:
+  - node_line_name: retrieve_node_line
+    nodes:
+      - node_type: semantic_retrieval
+        strategy:
+          metrics: [retrieval_f1, retrieval_recall, retrieval_precision]
+        top_k: 3
+        modules:
+          - module_type: vectordb
+            vectordb: custom_vectordb
+
+  - node_line_name: post_retrieve_node_line
+    nodes:
+      - node_type: prompt_maker
+        strategy:
+          metrics: [bleu, meteor, rouge]
+        modules:
+          - module_type: chat_fstring
+            prompt:
+              - - role: system
+                  content: "주어진 passage만을 이용하여 질문에 답하시오."
+                - role: user
+                  content: "passage: {retrieved_contents}\n\nQuestion: {query}\n\nAnswer:"
+
+      - node_type: generator
+        strategy:
+          metrics:
+            - metric_name: rouge
+        modules:
+          - module_type: llama_index_llm
+            llm: openailike
+            model: openai/gpt-oss-120b
+            api_base: https://llmserving.surromind.ai/v1
+            api_key: ""
+            is_chat_model: true
+            temperature: 0.1
+            timeout: 60
+            max_tokens: 4096

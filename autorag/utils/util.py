@@ -639,19 +639,26 @@ def pop_params(func: Callable, kwargs: Dict) -> Dict:
 	"""
 	Pop parameters from the given func and return them.
 	It automatically deletes the parameters like "self" or "cls".
+	If the function has **kwargs (VAR_KEYWORD), all remaining parameters are passed through.
 
 	:param func: The function to pop parameters.
 	:param kwargs: kwargs to pop parameters.
 	:return: The popped parameters.
 	"""
 	ignore_params = ["self", "cls"]
-	target_params = list(inspect.signature(func).parameters.keys())
+	sig = inspect.signature(func)
+	target_params = list(sig.parameters.keys())
 	target_params = list(filter(lambda x: x not in ignore_params, target_params))
+
+	# Check if function accepts **kwargs (VAR_KEYWORD)
+	has_var_keyword = any(
+		p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values()
+	)
 
 	init_params = {}
 	kwargs_keys = list(kwargs.keys())
 	for key in kwargs_keys:
-		if key in target_params:
+		if key in target_params or has_var_keyword:
 			init_params[key] = kwargs.pop(key)
 	return init_params
 

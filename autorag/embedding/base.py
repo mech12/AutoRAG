@@ -108,6 +108,7 @@ class EmbeddingModel:
 				"mock",
 				"ollama",
 				"vllm",
+				"openai_like",
 			]:
 				raise ValueError(
 					f"Embedding model type '{target['type']}' is not supported"

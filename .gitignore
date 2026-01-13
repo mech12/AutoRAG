@@ -169,3 +169,6 @@ projects/tutorial_1
 .claude/
 .envrc
 data/
+logs/
+trial.json
+resources/
