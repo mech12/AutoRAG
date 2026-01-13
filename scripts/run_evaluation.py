@@ -21,6 +21,10 @@ from testcase_config import load_testcase
 # Load environment variables
 load_dotenv()
 
+# Get the virtual environment path for autorag
+PROJECT_ROOT = Path(__file__).parent.parent
+VENV_AUTORAG = PROJECT_ROOT / ".venv" / "bin" / "autorag"
+
 # 한글-로마자 변환 테이블 (간단 버전)
 KOREAN_TO_ROMAN = {
     "인사규정": "insa",
@@ -30,6 +34,39 @@ KOREAN_TO_ROMAN = {
     "청크": "chunk",
     "상세": "detail",
 }
+
+
+def _delete_milvus_collection_if_exists(collection_name: str, env: dict) -> bool:
+    """
+    Milvus 컬렉션이 존재하면 삭제.
+    데이터가 재생성되었을 때 기존 컬렉션의 doc_id 불일치 문제를 방지.
+    """
+    try:
+        from pymilvus import connections, utility
+
+        milvus_host = env.get("MILVUS_HOST")
+        milvus_port = env.get("MILVUS_PORT")
+
+        if not milvus_host or not milvus_port:
+            return False
+
+        connections.connect(
+            "default",
+            uri=f"http://{milvus_host}:{milvus_port}",
+            user=env.get("MILVUS_USER", ""),
+            password=env.get("MILVUS_PASSWORD", ""),
+        )
+
+        if utility.has_collection(collection_name):
+            utility.drop_collection(collection_name)
+            print(f"  기존 Milvus 컬렉션 삭제: {collection_name}")
+            return True
+
+        connections.disconnect("default")
+    except Exception as e:
+        print(f"  Milvus 컬렉션 삭제 중 오류 (무시됨): {e}")
+
+    return False
 
 
 def _make_safe_collection_name(name: str) -> str:
@@ -95,14 +132,21 @@ def run_evaluation(testcase: str):
         print(f"먼저 데이터를 준비하세요: make prepare-data TESTCASE={testcase}")
         sys.exit(1)
 
+    # 이전 trial 결과 정리 (doc_id 불일치 방지)
+    import shutil
+    if os.path.exists(tc.trial_dir):
+        shutil.rmtree(tc.trial_dir)
+        print(f"  이전 trial 결과 삭제: {tc.trial_dir}")
+
     # 환경변수 오버라이드
     env = os.environ.copy()
     env.update(tc.env)
 
-    # Milvus 컬렉션 이름 동적 생성
+    # Milvus 컬렉션 이름 동적 생성 (Milvus 설정 파일 사용 시에만)
     # MILVUS_COLLECTION_NAME_PREFIX가 설정되어 있으면 테스트케이스별 컬렉션 생성
+    is_milvus_config = "milvus" in tc.rag_config.lower()
     milvus_prefix = env.get("MILVUS_COLLECTION_NAME_PREFIX")
-    if milvus_prefix and "MILVUS_COLLECTION_NAME" not in tc.env:
+    if is_milvus_config and milvus_prefix and "MILVUS_COLLECTION_NAME" not in tc.env:
         # Milvus 컬렉션 이름: 영문, 숫자, 언더스코어만 허용
         # 한글 테스트케이스 이름을 안전한 이름으로 변환
         safe_name = _make_safe_collection_name(testcase)
@@ -110,9 +154,12 @@ def run_evaluation(testcase: str):
         env["MILVUS_COLLECTION_NAME"] = collection_name
         print(f"  Milvus 컬렉션: {collection_name}")
 
+        # 기존 컬렉션 삭제 (doc_id 불일치 방지)
+        _delete_milvus_collection_if_exists(collection_name, env)
+
     # Build command
     cmd = [
-        "autorag",
+        str(VENV_AUTORAG),
         "evaluate",
         "--config",
         tc.rag_config,
