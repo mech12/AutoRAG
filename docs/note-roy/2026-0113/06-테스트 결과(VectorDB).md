@@ -6,17 +6,71 @@
 
 ### 전체 성능 비교표
 
-| 테스트 케이스      | Vector DB | F1    | Recall | Precision | ROUGE | 실행시간 |
-| :----------------- | :-------- | :---: | :----: | :-------: | :---: | :------: |
-| hr_rule_milvus     | Milvus    | 0.475 | 0.95   | 0.317     | 0.420 | 1.61s    |
-| hr_rule_weaviate   | Weaviate  | 0.475 | 0.95   | 0.317     | 0.392 | 1.45s    |
-| hr_rule_qdrant     | Qdrant    | 0.475 | 0.95   | 0.317     | 0.415 | 1.29s    |
+| 테스트 케이스       | 설명                                      | F1    | Recall | Precision | ROUGE | 실행시간 |
+| :------------------ | :---------------------------------------- | :---: | :----: | :-------: | :---: | :------: |
+| hr_rule_docling     | Docling 파서 (온프레미스, IBM)            | 0.500 | 1.00   | 0.333     | 0.357 | 1.49s    |
+| hr_rule_milvus      | Milvus Vector DB                          | 0.475 | 0.95   | 0.317     | 0.420 | 1.61s    |
+| hr_rule_weaviate    | Weaviate Vector DB                        | 0.475 | 0.95   | 0.317     | 0.392 | 1.45s    |
+| hr_rule_qdrant      | Qdrant Vector DB                          | 0.475 | 0.95   | 0.317     | 0.415 | 1.29s    |
+| hr_rule_chroma_http | Chroma HTTP Vector DB                     | 0.475 | 0.95   | 0.317     | 0.416 | 1.43s    |
 
 ### 주요 발견
 
-- **검색 성능 (F1, Recall, Precision)**: 세 Vector DB 모두 **동일한 검색 성능**을 보임
-- **생성 품질 (ROUGE)**: Milvus(0.420) > Qdrant(0.415) > Weaviate(0.392) 순
-- **실행 속도**: Qdrant(1.29s) > Weaviate(1.45s) > Milvus(1.61s) 순으로 빠름
+- **Docling 파서가 검색 성능 최고**: F1 0.500, Recall 100% (다른 파서 대비 5% 향상)
+- **검색 성능 (Vector DB 비교)**: 4개 Vector DB 모두 **동일한 검색 성능**을 보임 (F1: 0.475)
+- **생성 품질 (ROUGE)**: Milvus(0.420) > Chroma(0.416) > Qdrant(0.415) > Weaviate(0.392) > Docling(0.357)
+- **실행 속도**: Qdrant(1.29s) > Chroma(1.43s) > Weaviate(1.45s) > Docling(1.49s) > Milvus(1.61s)
+
+### 파서 vs Vector DB 영향 분석
+
+| 구분 | 검색 성능 영향 | 생성 품질 영향 |
+| :--- | :------------- | :------------- |
+| **파서 변경** (Docling) | F1 +5% 향상 | ROUGE -6% 하락 |
+| **Vector DB 변경** | 변화 없음 | ROUGE ±3% 변동 |
+
+> Docling 파서는 검색 성능은 높지만, 생성 품질(ROUGE)이 낮은 이유는 파싱된 텍스트 형식이 LLM 답변 생성에 최적화되지 않았기 때문으로 추정됨
+
+### 테스트 케이스별 설정 상세
+
+| 테스트 케이스       | 파서           | 청킹 설정                | Vector DB        |
+| :------------------ | :------------- | :----------------------- | :--------------- |
+| hr_rule_docling     | Docling        | chunk_ko_onpremise.yaml  | Chroma (로컬)    |
+| hr_rule_milvus      | pdfplumber     | 기본값 (512/50)          | Milvus           |
+| hr_rule_weaviate    | pdfplumber     | 기본값 (512/50)          | Weaviate         |
+| hr_rule_qdrant      | pdfplumber     | 기본값 (512/50)          | Qdrant           |
+| hr_rule_chroma_http | pdfplumber     | 기본값 (512/50)          | Chroma (HTTP)    |
+
+#### hr_rule_docling 청킹 설정 (`chunk_ko_onpremise.yaml`)
+
+```yaml
+modules:
+  - module_type: llama_index_chunk
+    chunk_method: [ Token, Sentence ]
+    chunk_size: [ 1024, 512 ]
+    chunk_overlap: 24
+    add_file_name: ko
+  - module_type: llama_index_chunk
+    chunk_method: [ SentenceWindow ]
+    sentence_splitter: kiwi
+    add_file_name: ko
+  - module_type: llama_index_chunk
+    chunk_method: [ SimpleFile ]
+    add_file_name: ko
+```
+
+| 청킹 방법        | 설정                  | 설명                     |
+| :--------------- | :-------------------- | :----------------------- |
+| Token            | 1024, 512 토큰        | 토큰 단위로 분할         |
+| Sentence         | 1024, 512 토큰        | 문장 경계 기준 분할      |
+| SentenceWindow   | kiwi 형태소 분석기    | 한국어 문장 윈도우       |
+| SimpleFile       | -                     | 파일 전체를 하나의 청크  |
+
+#### 기본 청킹 설정 (hr_rule_milvus 등)
+
+```yaml
+chunk_size: 512
+chunk_overlap: 50
+```
 
 ## 2. 각 지표(Metric)의 의미
 
