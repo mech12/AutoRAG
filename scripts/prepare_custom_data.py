@@ -186,6 +186,13 @@ def generate_qa(
     raw_df = pd.read_parquet(parsed_path)
     corpus_df = pd.read_parquet(corpus_path)
 
+    # num_qa가 corpus 크기보다 크면 자동 조정
+    corpus_size = len(corpus_df)
+    if num_qa > corpus_size:
+        print(f"  경고: num_qa({num_qa})가 corpus 크기({corpus_size})보다 큽니다.")
+        print(f"  num_qa를 {corpus_size}로 조정합니다.")
+        num_qa = corpus_size
+
     raw_instance = Raw(raw_df)
     corpus_instance = Corpus(corpus_df, raw_instance)
 
@@ -231,6 +238,13 @@ def generate_qa_simple(
     # Load data
     raw_df = pd.read_parquet(parsed_path)
     corpus_df = pd.read_parquet(corpus_path)
+
+    # num_qa가 corpus 크기보다 크면 자동 조정
+    corpus_size = len(corpus_df)
+    if num_qa > corpus_size:
+        print(f"  경고: num_qa({num_qa})가 corpus 크기({corpus_size})보다 큽니다.")
+        print(f"  num_qa를 {corpus_size}로 조정합니다.")
+        num_qa = corpus_size
 
     raw_instance = Raw(raw_df)
     corpus_instance = Corpus(corpus_df, raw_instance)
