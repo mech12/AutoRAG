@@ -1,0 +1,6 @@
+# Marker PDF Parser (On-premise)
+# Install: make install-onpremise
+# Marker excels at converting PDFs to markdown with good table support
+modules:
+  - module_type: marker_parse
+    file_type: pdf

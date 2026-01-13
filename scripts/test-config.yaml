@@ -33,18 +33,31 @@ test_cases:
     use_llm: true
 
   # -------------------------------------------------------------------------
-  # 고급 파싱/청킹 테스트 (인사규정 기준)
+  # 온프레미스 파서 테스트 (인사규정 기준)
   # -------------------------------------------------------------------------
-  # 외부 parse_config, chunk_config 파일 사용
-  # 참고: parse_hybird.yaml은 LlamaParse API 키 필요 (LLAMA_CLOUD_API_KEY)
-  # 참고: chunk_ko.yaml은 여러 청킹 방법을 비교 테스트
+  # 외부 API 없이 로컬에서 실행 가능한 파서들
+  # 설치: make install-onpremise
 
-  hr_rule_hybrid_chunk_ko:
-    description: "인사규정 - 하이브리드 파서 + 한국어 청킹"
+  hr_rule_marker:
+    description: "인사규정 - Marker 파서 (온프레미스)"
     input_dir: "docs/sample-data/인사규정"
-    output_dir: "logs/testCase/hr_rule_hybrid_chunk_ko"
-    parse_config: "sample_config/parse/parse_hybird.yaml"
-    chunk_config: "sample_config/chunk/chunk_ko.yaml"
+    output_dir: "logs/testCase/hr_rule_marker"
+    parse_config: "sample_config/parse/parse_marker.yaml"
+    chunk_config: "sample_config/chunk/chunk_ko_onpremise.yaml"
+
+  hr_rule_docling:
+    description: "인사규정 - Docling 파서 (온프레미스, IBM)"
+    input_dir: "docs/sample-data/인사규정"
+    output_dir: "logs/testCase/hr_rule_docling"
+    parse_config: "sample_config/parse/parse_docling.yaml"
+    chunk_config: "sample_config/chunk/chunk_ko_onpremise.yaml"
+
+  hr_rule_onpremise_compare:
+    description: "인사규정 - 온프레미스 파서 비교 (Marker vs Docling vs pdfplumber)"
+    input_dir: "docs/sample-data/인사규정"
+    output_dir: "logs/testCase/hr_rule_onpremise_compare"
+    parse_config: "sample_config/parse/parse_onpremise.yaml"
+    chunk_config: "sample_config/chunk/chunk_ko_onpremise.yaml"
     rag_config: "sample_config/rag/korean/non_gpu/simple_korean_milvus.yaml"
 
   # -------------------------------------------------------------------------

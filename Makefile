@@ -1,4 +1,4 @@
-.PHONY: help install install-dev setup-nltk lint format check test test-clean \
+.PHONY: help install install-dev install-all setup-nltk lint format check test test-clean \
         quick-test quick-test-custom prepare-data evaluate evaluate-custom \
         help-prepare-data help-evaluate-custom dashboard api web validate clean \
         list-testcases show-testcase run-testcase compare-results help-testcase \
@@ -31,17 +31,22 @@ help: ## Show this help message
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 ##@ Installation
-install: ## Install AutoRAG (basic)
-	pip install AutoRAG
+install: ## Install AutoRAG (basic, uses venv if available)
+	$(if $(wildcard $(VENV)/bin/pip),$(VENV)/bin/pip,pip) install AutoRAG
 
 install-gpu: ## Install AutoRAG with GPU support
-	pip install "AutoRAG[gpu]"
+	$(if $(wildcard $(VENV)/bin/pip),$(VENV)/bin/pip,pip) install "AutoRAG[gpu]"
 
 install-parse: ## Install AutoRAG with GPU and parsing
-	pip install "AutoRAG[gpu,parse]"
+	$(if $(wildcard $(VENV)/bin/pip),$(VENV)/bin/pip,pip) install "AutoRAG[gpu,parse]"
+
+install-onpremise: ## Install on-premise parsing tools (marker, docling)
+	$(if $(wildcard $(VENV)/bin/python),uv pip install,pip install) marker-pdf docling
 
 install-dev: ## Install development environment (uv)
 	uv venv && uv sync --all-extras
+
+install-all: install install-onpremise ## Install AutoRAG + on-premise tools
 
 setup-nltk: ## Setup NLTK data (required after install)
 	pip install --upgrade pyOpenSSL nltk

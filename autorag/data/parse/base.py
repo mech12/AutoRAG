@@ -61,7 +61,7 @@ def parser_node(func):
 				result = func(
 					data_path_list=data_paths, parse_method=parse_method, **kwargs
 				)
-		elif func.__name__ in ["clova_ocr", "llama_parse", "table_hybrid_parse"]:
+		elif func.__name__ in ["clova_ocr", "llama_parse", "table_hybrid_parse", "marker_parse", "docling_parse"]:
 			result = func(data_path_list=data_paths, **kwargs)
 		else:
 			raise ValueError(f"Unsupported module_type: {func.__name__}")

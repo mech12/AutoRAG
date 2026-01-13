@@ -8,22 +8,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## 2026-01-13
+
 ### Fixed
 
-- Fix doc_id mismatch error in VectorDB after validation
-  - Validation creates sample data in collections which caused doc_id not found errors
-  - Added automatic VectorDB collection cleanup after validation completes
-  - Supports Weaviate, Milvus, Qdrant, and Chroma cleanup
-- Fix Chroma HTTP client: Change AsyncHttpClient to HttpClient for compatibility
+- **Chroma HTTP 클라이언트 호환성 수정** (`autorag/vectordb/chroma.py`)
+  - chromadb 1.0+ 에서 `AsyncHttpClient`가 코루틴을 반환하는 문제 해결
+  - 동기 컨텍스트에서 사용 가능하도록 `HttpClient`로 변경
+- **Vector DB doc_id 불일치 에러 수정** (`scripts/run_evaluation.py`)
+  - 평가 전 기존 컬렉션 자동 삭제로 stale doc_id 문제 방지
+  - Milvus, Weaviate, Qdrant, Chroma HTTP 모두 지원
 
 ### Added
 
-- Add `make show-testcase TESTCASE=<name>` command to display QA data
-- Add documentation for QA generation methods and test results
-- Add comprehensive sample_config guide (parse, chunk, RAG settings)
-- Add support for external parse_config and chunk_config in test cases
-  - New testcase fields: `parse_config`, `chunk_config`
-  - Example: `hr_rule_hybrid_chunk_ko` using `parse_hybird.yaml` + `chunk_ko.yaml`
+- **Vector DB 비교 테스트 케이스** (`scripts/test-config.yaml`)
+  - 인사규정 기준: `hr_rule_milvus`, `hr_rule_weaviate`, `hr_rule_qdrant`, `hr_rule_chroma_http`
+  - 고압가스 기준: `gas_safety_milvus`, `gas_safety_weaviate`, `gas_safety_qdrant`, `gas_safety_chroma_http`
+- **Milvus 동적 컬렉션 이름 생성**
+  - `MILVUS_COLLECTION_NAME_PREFIX` 환경변수 지원
+  - 테스트케이스별 자동 생성: `{prefix}_autorag_{testcase_name}`
+  - 한글 테스트케이스명 자동 로마자 변환 (인사규정 → insa, 고압가스 → gas)
+- **Chroma HTTP 컬렉션 자동 삭제** (`_delete_chroma_collection_if_exists`)
+- **외부 parse/chunk 설정 파일 지원**
+  - 테스트케이스에서 `parse_config`, `chunk_config` 필드로 외부 YAML 참조
+  - 예: `hr_rule_hybrid_chunk_ko` (LlamaParse + 한국어 청킹)
+
+### Changed
+
+- **`make list-testcases` 출력 간소화**
+  - `make run-testcase TESTCASE=...` 명령만 표시
+  - 불필요한 `prepare-data`, `evaluate-custom` 명령 제거
 
 ## 2026-01-08
 

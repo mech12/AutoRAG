@@ -22,6 +22,8 @@ def get_support_modules(module_name: str) -> Callable:
 			"autorag.data.parse.table_hybrid_parse",
 			"table_hybrid_parse",
 		),
+		"marker_parse": ("autorag.data.parse.marker_parse", "marker_parse"),
+		"docling_parse": ("autorag.data.parse.docling_parse", "docling_parse"),
 		# chunk
 		"llama_index_chunk": ("autorag.data.chunk", "llama_index_chunk"),
 		"langchain_chunk": ("autorag.data.chunk", "langchain_chunk"),

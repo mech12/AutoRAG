@@ -1,0 +1,14 @@
+# On-premise PDF Parsers Comparison
+# Install: make install-onpremise
+# Compare different on-premise parsing solutions
+modules:
+  # Marker - good for markdown conversion with tables
+  - module_type: marker_parse
+    file_type: pdf
+  # Docling (IBM) - good for structured content extraction
+  - module_type: docling_parse
+    file_type: pdf
+  # Langchain pdfplumber - fast, basic parsing
+  - module_type: langchain_parse
+    file_type: pdf
+    parse_method: pdfplumber

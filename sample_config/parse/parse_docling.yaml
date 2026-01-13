@@ -1,0 +1,6 @@
+# Docling PDF Parser (On-premise, IBM)
+# Install: make install-onpremise
+# Docling excels at extracting structured content including tables
+modules:
+  - module_type: docling_parse
+    file_type: pdf
