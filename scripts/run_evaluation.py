@@ -36,6 +36,44 @@ KOREAN_TO_ROMAN = {
 }
 
 
+def _delete_weaviate_collection_if_exists(collection_name: str, env: dict) -> bool:
+    """
+    Weaviate 컬렉션이 존재하면 삭제.
+    데이터가 재생성되었을 때 기존 컬렉션의 doc_id 불일치 문제를 방지.
+    """
+    try:
+        import weaviate
+
+        weaviate_host = env.get("WEAVIATE_HOST")
+        weaviate_port = env.get("WEAVIATE_HTTP_PORT")
+        weaviate_grpc_port = env.get("WEAVIATE_GRPC_PORT", "50051")
+
+        if not weaviate_host or not weaviate_port:
+            return False
+
+        client = weaviate.connect_to_local(
+            host=weaviate_host,
+            port=int(weaviate_port),
+            grpc_port=int(weaviate_grpc_port),
+        )
+
+        # Weaviate는 컬렉션 이름의 첫 글자를 대문자로 변환
+        # autorag_collection -> Autorag_collection
+        capitalized_name = collection_name[0].upper() + collection_name[1:]
+
+        if client.collections.exists(capitalized_name):
+            client.collections.delete(capitalized_name)
+            print(f"  기존 Weaviate 컬렉션 삭제: {capitalized_name}")
+            client.close()
+            return True
+
+        client.close()
+    except Exception as e:
+        print(f"  Weaviate 컬렉션 삭제 중 오류 (무시됨): {e}")
+
+    return False
+
+
 def _delete_milvus_collection_if_exists(collection_name: str, env: dict) -> bool:
     """
     Milvus 컬렉션이 존재하면 삭제.
@@ -142,9 +180,12 @@ def run_evaluation(testcase: str):
     env = os.environ.copy()
     env.update(tc.env)
 
+    # Vector DB 컬렉션 관리 (doc_id 불일치 방지)
+    is_milvus_config = "milvus" in tc.rag_config.lower()
+    is_weaviate_config = "weaviate" in tc.rag_config.lower()
+
     # Milvus 컬렉션 이름 동적 생성 (Milvus 설정 파일 사용 시에만)
     # MILVUS_COLLECTION_NAME_PREFIX가 설정되어 있으면 테스트케이스별 컬렉션 생성
-    is_milvus_config = "milvus" in tc.rag_config.lower()
     milvus_prefix = env.get("MILVUS_COLLECTION_NAME_PREFIX")
     if is_milvus_config and milvus_prefix and "MILVUS_COLLECTION_NAME" not in tc.env:
         # Milvus 컬렉션 이름: 영문, 숫자, 언더스코어만 허용
@@ -156,6 +197,12 @@ def run_evaluation(testcase: str):
 
         # 기존 컬렉션 삭제 (doc_id 불일치 방지)
         _delete_milvus_collection_if_exists(collection_name, env)
+
+    # Weaviate 컬렉션 삭제 (기존 doc_id 불일치 방지)
+    if is_weaviate_config:
+        # Weaviate 설정 파일에서 collection_name 기본값: autorag_collection
+        weaviate_collection = "autorag_collection"
+        _delete_weaviate_collection_if_exists(weaviate_collection, env)
 
     # Build command
     cmd = [
