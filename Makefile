@@ -1,5 +1,6 @@
 .PHONY: help install install-dev setup-nltk lint format check test test-clean \
-        quick-test quick-test-custom evaluate dashboard api web validate clean
+        quick-test quick-test-custom prepare-data evaluate evaluate-custom \
+        dashboard api web validate clean
 
 # Default target
 .DEFAULT_GOAL := help
@@ -77,12 +78,30 @@ quick-test-custom: ## Run RAG evaluation with custom LLM server (requires .env)
 		--corpus_data_path $(SAMPLE_CORPUS) \
 		--project_dir $(PROJECT_DIR)
 
+##@ Data Preparation
+prepare-data: ## Prepare custom PDF data for evaluation (requires input_dir)
+	@if [ -z "$(INPUT_DIR)" ]; then echo "Usage: make prepare-data INPUT_DIR=/path/to/pdfs [OUTPUT_DIR=data/custom] [NUM_QA=20] [USE_LLM=false]"; exit 1; fi
+	python scripts/prepare_custom_data.py \
+		--input_dir $(INPUT_DIR) \
+		--output_dir $(or $(OUTPUT_DIR),data/custom) \
+		--num_qa $(or $(NUM_QA),20) \
+		$(if $(filter true,$(USE_LLM)),--use_llm,)
+
 ##@ RAG Evaluation
 evaluate: ## Run RAG evaluation with custom data (qa.parquet, corpus.parquet)
 	autorag evaluate \
 		--config $(CONFIG) \
 		--qa_data_path $(QA_DATA) \
 		--corpus_data_path $(CORPUS_DATA) \
+		--project_dir $(PROJECT_DIR)
+
+evaluate-custom: ## Run RAG evaluation with prepared custom data (data/custom/)
+	@if [ ! -f .env ]; then echo "Error: .env file not found. Copy .env.example to .env first."; exit 1; fi
+	@if [ ! -f data/custom/qa.parquet ]; then echo "Error: data/custom/qa.parquet not found. Run 'make prepare-data' first."; exit 1; fi
+	autorag evaluate \
+		--config $(CONFIG_CUSTOM) \
+		--qa_data_path data/custom/qa.parquet \
+		--corpus_data_path data/custom/corpus.parquet \
 		--project_dir $(PROJECT_DIR)
 
 validate: ## Validate config file
