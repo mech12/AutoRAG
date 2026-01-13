@@ -2,7 +2,7 @@
         quick-test quick-test-custom prepare-data evaluate evaluate-custom \
         help-prepare-data help-evaluate-custom dashboard api web validate clean \
         list-testcases show-testcase run-testcase compare-results help-testcase \
-        multi-dashboard multi-web
+        compare-dashboard multi-web
 
 # Default target
 .DEFAULT_GOAL := help
@@ -292,8 +292,8 @@ api: ## Start API server (0.0.0.0:8000)
 web: ## Start web interface
 	autorag run_web --trial_path $(TRIAL_DIR)
 
-multi-dashboard: ## Start multi-testcase dashboard (port 7690)
-	$(PYTHON) scripts/multi_dashboard.py --port $(DASHBOARD_PORT)
+compare-dashboard: ## Start compare dashboard for side-by-side testcase comparison (port 7691)
+	$(PYTHON) scripts/compare_dashboard.py --port 7691
 
 multi-web: ## Start multi-testcase web interface (port 8501)
 	streamlit run scripts/multi_web.py
