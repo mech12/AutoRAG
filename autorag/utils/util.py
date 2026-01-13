@@ -599,6 +599,20 @@ def get_best_row(
 	return bests.iloc[0]
 
 
+def _suppress_event_loop_closed_handler(loop, context):
+	"""
+	Custom exception handler to suppress 'Event loop is closed' errors
+	that occur during httpx client cleanup after the event loop closes.
+	These errors are non-functional and can be safely ignored.
+	"""
+	exception = context.get("exception")
+	if isinstance(exception, RuntimeError) and "Event loop is closed" in str(exception):
+		# Suppress this specific error - it's a cleanup issue, not functional
+		return
+	# For other exceptions, use the default handler
+	loop.default_exception_handler(context)
+
+
 def get_event_loop() -> AbstractEventLoop:
 	"""
 	Get asyncio event loop safely.
@@ -608,6 +622,8 @@ def get_event_loop() -> AbstractEventLoop:
 	except RuntimeError:
 		loop = asyncio.new_event_loop()
 		asyncio.set_event_loop(loop)
+		# Set custom exception handler to suppress cleanup errors
+		loop.set_exception_handler(_suppress_event_loop_closed_handler)
 	return loop
 
 

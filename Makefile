@@ -7,7 +7,8 @@
 # Variables
 VENV := .venv
 PYTHON := python
-TRIAL_DIR := ./0
+PROJECT_DIR := logs
+TRIAL_DIR := logs/0
 CONFIG := sample_config/rag/korean/non_gpu/simple_korean.yaml
 CONFIG_CUSTOM := sample_config/rag/korean/non_gpu/simple_korean_custom.yaml
 SAMPLE_QA := tests/resources/dataset_sample_gen_by_autorag/qa.parquet
@@ -61,26 +62,30 @@ quick-test: ## Run RAG evaluation with sample data (requires OPENAI_API_KEY)
 	autorag evaluate \
 		--config $(CONFIG) \
 		--qa_data_path $(SAMPLE_QA) \
-		--corpus_data_path $(SAMPLE_CORPUS)
+		--corpus_data_path $(SAMPLE_CORPUS) \
+		--project_dir $(PROJECT_DIR)
 
 quick-test-custom: ## Run RAG evaluation with custom LLM server
 	autorag evaluate \
 		--config $(CONFIG_CUSTOM) \
 		--qa_data_path $(SAMPLE_QA) \
-		--corpus_data_path $(SAMPLE_CORPUS)
+		--corpus_data_path $(SAMPLE_CORPUS) \
+		--project_dir $(PROJECT_DIR)
 
 ##@ RAG Evaluation
 evaluate: ## Run RAG evaluation with custom data (qa.parquet, corpus.parquet)
 	autorag evaluate \
 		--config $(CONFIG) \
 		--qa_data_path $(QA_DATA) \
-		--corpus_data_path $(CORPUS_DATA)
+		--corpus_data_path $(CORPUS_DATA) \
+		--project_dir $(PROJECT_DIR)
 
 validate: ## Validate config file
 	autorag validate \
 		--config $(CONFIG) \
 		--qa_data_path $(QA_DATA) \
-		--corpus_data_path $(CORPUS_DATA)
+		--corpus_data_path $(CORPUS_DATA) \
+		--project_dir $(PROJECT_DIR)
 
 ##@ Deployment
 dashboard: ## Start result dashboard (port 7690)
@@ -94,6 +99,6 @@ web: ## Start web interface
 
 ##@ Cleanup
 clean: ## Remove trial results and cache
-	rm -rf ./0 ./1 ./2 ./__pycache__ .pytest_cache .ruff_cache
+	rm -rf ./0 ./1 ./2 ./logs ./__pycache__ .pytest_cache .ruff_cache
 	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 	find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
