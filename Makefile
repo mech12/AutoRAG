@@ -293,7 +293,7 @@ web: ## Start web interface
 	autorag run_web --trial_path $(TRIAL_DIR)
 
 compare-dashboard: ## Start compare dashboard for side-by-side testcase comparison (port 7691)
-	$(PYTHON) scripts/compare_dashboard.py --port 7691
+	BOKEH_ALLOW_WS_ORIGIN="*" $(PYTHON) scripts/compare_dashboard.py --port 7691
 
 multi-web: ## Start multi-testcase web interface (port 8501)
 	streamlit run scripts/multi_web.py
