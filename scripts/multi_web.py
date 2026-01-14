@@ -53,6 +53,26 @@ def set_page_config():
         layout="wide",
         initial_sidebar_state="expanded",
     )
+    # 사이드바 스타일 조정
+    st.markdown(
+        """
+        <style>
+        [data-testid="stSidebar"] {
+            min-width: 280px;
+            max-width: 320px;
+        }
+        /* 드롭다운 옵션 텍스트 전체 표시 */
+        [data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] {
+            min-width: 100%;
+        }
+        [data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] > div {
+            white-space: normal;
+            overflow: visible;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
 
 def main():

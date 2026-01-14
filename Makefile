@@ -2,7 +2,7 @@
         quick-test quick-test-custom prepare-data evaluate evaluate-custom \
         help-prepare-data help-evaluate-custom dashboard api web validate clean \
         list-testcases show-testcase run-testcase compare-results help-testcase \
-        compare-dashboard multi-web
+        multi-dashboard compare-dashboard multi-web compare-web
 
 # Default target
 .DEFAULT_GOAL := help
@@ -292,11 +292,17 @@ api: ## Start API server (0.0.0.0:8000)
 web: ## Start web interface
 	autorag run_web --trial_path $(TRIAL_DIR)
 
+multi-dashboard: ## Start multi-testcase dashboard (port 7690)
+	BOKEH_ALLOW_WS_ORIGIN="*" $(PYTHON) scripts/multi_dashboard.py --port 7690
+
 compare-dashboard: ## Start compare dashboard for side-by-side testcase comparison (port 7691)
 	BOKEH_ALLOW_WS_ORIGIN="*" $(PYTHON) scripts/compare_dashboard.py --port 7691
 
 multi-web: ## Start multi-testcase web interface (port 8501)
 	streamlit run scripts/multi_web.py
+
+compare-web: ## Start side-by-side testcase comparison web (port 8502)
+	streamlit run scripts/compare_web.py --server.port 8502
 
 ##@ Cleanup
 clean: ## Remove trial results and cache
