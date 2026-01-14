@@ -2,7 +2,7 @@
         quick-test quick-test-custom prepare-data evaluate evaluate-custom \
         help-prepare-data help-evaluate-custom dashboard api web validate clean \
         list-testcases show-testcase run-testcase compare-results help-testcase \
-        multi-dashboard compare-dashboard multi-web compare-web unified-dashboard
+        multi-dashboard compare-dashboard multi-web compare-web
 
 # Default target
 .DEFAULT_GOAL := help
@@ -303,9 +303,6 @@ multi-web: ## Start multi-testcase web interface (port 8501)
 
 compare-web: ## Start side-by-side testcase comparison web (port 8502)
 	streamlit run scripts/compare_web.py --server.port 8502
-
-unified-dashboard: ## Start unified dashboard with Compare Dashboard + Compare Web tabs (port 7700)
-	BOKEH_ALLOW_WS_ORIGIN="*" $(PYTHON) scripts/unified_dashboard.py --port 7700
 
 ##@ Cleanup
 clean: ## Remove trial results and cache
