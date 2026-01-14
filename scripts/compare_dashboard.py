@@ -532,6 +532,30 @@ def create_testcase_panel(testcase_name: str) -> pn.Column:
         except Exception as e:
             node_views.append((node_name, pn.pane.Markdown(f"Error: {e}")))
 
+    # QA Data
+    qa_filepath = os.path.join(os.path.dirname(trial_dir), "data", "qa.parquet")
+    if os.path.exists(qa_filepath):
+        try:
+            qa_df = pd.read_parquet(qa_filepath)
+            qa_md = "## QA 데이터\n\n"
+            qa_md += f"총 {len(qa_df)}개의 질의-응답 쌍\n\n"
+            for idx, row in qa_df.iterrows():
+                qa_md += f"### Q{idx+1}: {row['query']}\n\n"
+                if 'generation_gt' in row and row['generation_gt']:
+                    gt = row['generation_gt']
+                    if isinstance(gt, list):
+                        gt = gt[0] if gt else ""
+                    # 긴 텍스트는 축약
+                    if len(str(gt)) > 500:
+                        gt = str(gt)[:500] + "..."
+                    qa_md += f"**정답:** {gt}\n\n"
+                qa_md += "---\n\n"
+            qa_tab = pn.pane.Markdown(qa_md, sizing_mode="stretch_width")
+        except Exception as e:
+            qa_tab = pn.pane.Markdown(f"QA 데이터 로드 오류: {e}")
+    else:
+        qa_tab = pn.pane.Markdown("QA 데이터를 찾을 수 없습니다.")
+
     # YAML Config
     yaml_filepath = os.path.join(trial_dir, "config.yaml")
     if os.path.exists(yaml_filepath):
@@ -544,6 +568,7 @@ def create_testcase_panel(testcase_name: str) -> pn.Column:
     tabs = pn.Tabs(
         ("Summary", trial_summary_tab),
         *node_views,
+        ("QA", qa_tab),
         ("Config", yaml_tab),
         dynamic=True,
     )
