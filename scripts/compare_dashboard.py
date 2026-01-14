@@ -587,7 +587,7 @@ def create_compare_app():
 
     if len(available) < 1:
         return pn.Column(
-            pn.pane.Markdown("# AutoRAG 테스트 케이스 비교"),
+            pn.pane.Markdown("# AutoRAG 테스트 결과 비교"),
             pn.pane.Alert(
                 "실행된 테스트 케이스가 없습니다.\n\n"
                 "테스트 케이스를 실행하려면:\n"
@@ -598,7 +598,7 @@ def create_compare_app():
 
     if len(available) < 2:
         return pn.Column(
-            pn.pane.Markdown("# AutoRAG 테스트 케이스 비교"),
+            pn.pane.Markdown("# AutoRAG 테스트 결과 비교"),
             pn.pane.Alert(
                 "비교하려면 최소 2개의 실행된 테스트 케이스가 필요합니다.\n"
                 f"현재 {len(available)}개만 있습니다.",
@@ -673,7 +673,7 @@ def create_compare_app():
     )
 
     return pn.Column(
-        pn.pane.Markdown("# AutoRAG 테스트 케이스 비교"),
+        pn.pane.Markdown("# AutoRAG 테스트 결과 비교"),
         pn.pane.Markdown("두 테스트 케이스의 평가 결과를 나란히 비교합니다."),
         glossary_accordion,
         pn.layout.Divider(),
