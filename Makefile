@@ -299,10 +299,10 @@ compare-dashboard: ## Start compare dashboard for side-by-side testcase comparis
 	BOKEH_ALLOW_WS_ORIGIN="*" $(PYTHON) scripts/compare_dashboard.py --port 7691
 
 multi-web: ## Start multi-testcase web interface (port 8501)
-	streamlit run scripts/multi_web.py
+	$(PYTHON) -m streamlit run scripts/multi_web.py
 
 compare-web: ## Start side-by-side testcase comparison web (port 8502)
-	streamlit run scripts/compare_web.py --server.port 8502
+	$(PYTHON) -m streamlit run scripts/compare_web.py --server.port 8502
 
 ##@ Cleanup
 clean: ## Remove trial results and cache
