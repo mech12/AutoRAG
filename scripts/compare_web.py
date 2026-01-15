@@ -4,7 +4,7 @@ AutoRAG 통합 비교 웹 인터페이스
 
 두 탭으로 구성:
 1. Compare Dashboard: 두 테스트 케이스의 평가 결과 비교
-2. Compare Web: 두 테스트 케이스에 동일한 질문 비교
+2. QA Test: 두 테스트 케이스에 동일한 질문 비교
 
 사용법:
     streamlit run scripts/compare_web.py --server.port 8502
@@ -51,7 +51,7 @@ GLOSSARY = {
 정답 문서: [문서A, 문서B] (2개)
 검색 결과: [문서A, 문서B, 문서C] (3개)
 → 정답 2개 중 2개를 찾음 = Recall 100%
-```"""
+```""",
     },
     "retrieval_precision": {
         "term": "정밀도 (Precision)",
@@ -68,7 +68,7 @@ GLOSSARY = {
 검색 결과: [문서A, 문서B, 문서C] (3개)
 이 중 정답: [문서A] (1개)
 → 검색 3개 중 정답 1개 = Precision 33%
-```"""
+```""",
     },
     "retrieval_f1": {
         "term": "F1 점수",
@@ -86,7 +86,7 @@ Case 2: Recall 10%, Precision 100%
   → 확실한 것만 가져오면 정확하지만 놓치는 정답이 많음
 
 F1은 이 둘의 균형을 측정
-```"""
+```""",
     },
     "rouge": {
         "term": "ROUGE",
@@ -107,7 +107,7 @@ ROUGE 점수 = 생성된 답변과 정답이 겹치는 단어 수 / 정답의 �
 
 겹치는 단어: "연차휴가는", "15일"
 → ROUGE ≈ 50%
-```"""
+```""",
     },
     "execution_time": {
         "term": "실행 시간",
@@ -127,7 +127,7 @@ ROUGE 점수 = 생성된 답변과 정답이 겹치는 단어 수 / 정답의 �
 | Qdrant    | 1.29s (가장 빠름) |
 | Chroma    | 1.43s |
 | Weaviate  | 1.45s |
-| Milvus    | 1.61s |"""
+| Milvus    | 1.61s |""",
     },
     "top_k": {
         "term": "Top-K",
@@ -142,7 +142,7 @@ ROUGE 점수 = 생성된 답변과 정답이 겹치는 단어 수 / 정답의 �
 - K가 클수록 → Recall 증가, Precision 감소
 - K가 작을수록 → Recall 감소, Precision 증가
 
-**권장값**: 보통 3~10 사이"""
+**권장값**: 보통 3~10 사이""",
     },
     "semantic_retrieval": {
         "term": "의미 기반 검색",
@@ -155,7 +155,7 @@ ROUGE 점수 = 생성된 답변과 정답이 겹치는 단어 수 / 정답의 �
 - 키워드가 정확히 일치하지 않아도 의미적으로 유사한 문서 검색 가능
 - "연차휴가"로 검색해도 "연차유급휴가" 문서를 찾을 수 있음
 
-**사용되는 Vector DB**: Milvus, Weaviate, Qdrant, Chroma 등"""
+**사용되는 Vector DB**: Milvus, Weaviate, Qdrant, Chroma 등""",
     },
     "generator": {
         "term": "생성기 (Generator)",
@@ -169,7 +169,7 @@ ROUGE 점수 = 생성된 답변과 정답이 겹치는 단어 수 / 정답의 �
 - `temperature`: 낮을수록 일관된 답변 (0.1 권장)
 - `max_tokens`: 최대 생성 토큰 수
 
-**실행 시간의 대부분**이 이 단계에서 소요됩니다."""
+**실행 시간의 대부분**이 이 단계에서 소요됩니다.""",
     },
     "prompt_maker": {
         "term": "프롬프트 생성기",
@@ -188,7 +188,7 @@ ROUGE 점수 = 생성된 답변과 정답이 겹치는 단어 수 / 정답의 �
 Question: 연차휴가는 몇 일인가요?
 
 Answer:
-```"""
+```""",
     },
     "VectorDB": {
         "term": "벡터 데이터베이스",
@@ -203,7 +203,7 @@ Answer:
 | **Qdrant** | 가장 빠름, 설정 간단 | 상대적으로 새로운 프로젝트 |
 | **Weaviate** | GraphQL 지원, 하이브리드 검색 | 메모리 사용량 높음 |
 | **Milvus** | 대규모 확장성, 검증된 안정성 | 설정이 복잡함 |
-| **Chroma** | 설치 간단, 로컬 개발 적합 | 대규모에 부적합 |"""
+| **Chroma** | 설치 간단, 로컬 개발 적합 | 대규모에 부적합 |""",
     },
 }
 
@@ -211,6 +211,7 @@ Answer:
 # ============================================================================
 # 공통 유틸리티
 # ============================================================================
+
 
 def find_available_testcases() -> list[tuple[str, str]]:
     """실행된 테스트 케이스 목록 반환 (trial 결과가 있는 것만)"""
@@ -271,6 +272,7 @@ def set_page_config():
 # Dashboard 탭 유틸리티 함수
 # ============================================================================
 
+
 def dict_to_markdown(data: dict, level: int = 1) -> str:
     """dict를 마크다운으로 변환"""
     result = ""
@@ -283,7 +285,9 @@ def dict_to_markdown(data: dict, level: int = 1) -> str:
     return result
 
 
-def dict_to_markdown_table(data: dict, key_column_name: str = "Key", value_column_name: str = "Value") -> str:
+def dict_to_markdown_table(
+    data: dict, key_column_name: str = "Key", value_column_name: str = "Value"
+) -> str:
     """dict를 마크다운 테이블로 변환"""
     result = f"| {key_column_name} | {value_column_name} |\n|------|------|\n"
     for key, value in data.items():
@@ -311,8 +315,12 @@ def find_node_dir(trial_dir: str) -> list[str]:
 def get_metric_values(node_summary_df: pd.DataFrame) -> dict:
     """최고 성능 모듈의 메트릭 값 추출"""
     non_metric_column_names = [
-        "filename", "module_name", "module_params",
-        "execution_time", "average_output_token", "is_best",
+        "filename",
+        "module_name",
+        "module_params",
+        "execution_time",
+        "average_output_token",
+        "is_best",
     ]
     best_row = node_summary_df.loc[node_summary_df["is_best"]].drop(
         columns=non_metric_column_names, errors="ignore"
@@ -380,6 +388,7 @@ def yaml_to_markdown(yaml_filepath: str) -> str:
 # Dashboard 탭 - 용어 설명
 # ============================================================================
 
+
 def render_glossary():
     """용어 설명 섹션 렌더링"""
     with st.expander("📖 용어 설명 (클릭하여 펼치기)"):
@@ -389,12 +398,17 @@ def render_glossary():
         for idx, (key, info) in enumerate(glossary_items):
             col_idx = idx % 5
             with cols[col_idx]:
-                if st.button(info["term"], key=f"glossary_{key}", use_container_width=True):
+                if st.button(
+                    info["term"], key=f"glossary_{key}", use_container_width=True
+                ):
                     st.session_state.selected_glossary = key
 
         st.divider()
 
-        if "selected_glossary" in st.session_state and st.session_state.selected_glossary:
+        if (
+            "selected_glossary" in st.session_state
+            and st.session_state.selected_glossary
+        ):
             info = GLOSSARY[st.session_state.selected_glossary]
             st.markdown(f"### {info['term']}")
             st.markdown(info["detail"])
@@ -406,14 +420,19 @@ def render_glossary():
 # Dashboard 탭 - 노드 뷰
 # ============================================================================
 
+
 def render_node_view(node_dir: str, key_prefix: str):
     """노드 상세 뷰 (차트 + 테이블)"""
     import matplotlib.pyplot as plt
     import seaborn as sns
 
     non_metric_column_names = [
-        "filename", "module_name", "module_params",
-        "execution_time", "average_output_token", "is_best",
+        "filename",
+        "module_name",
+        "module_params",
+        "execution_time",
+        "average_output_token",
+        "is_best",
     ]
     summary_path = os.path.join(node_dir, "summary.csv")
     if not os.path.exists(summary_path):
@@ -434,7 +453,7 @@ def render_node_view(node_dir: str, key_prefix: str):
             with col1:
                 fig, ax = plt.subplots(figsize=(6, 3))
                 sns.stripplot(data=metric_df, ax=ax)
-                plt.xticks(rotation=45, ha='right')
+                plt.xticks(rotation=45, ha="right")
                 plt.tight_layout()
                 st.pyplot(fig)
                 plt.close(fig)
@@ -442,7 +461,7 @@ def render_node_view(node_dir: str, key_prefix: str):
             with col2:
                 fig, ax = plt.subplots(figsize=(6, 3))
                 sns.boxplot(data=metric_df, ax=ax)
-                plt.xticks(rotation=45, ha='right')
+                plt.xticks(rotation=45, ha="right")
                 plt.tight_layout()
                 st.pyplot(fig)
                 plt.close(fig)
@@ -460,7 +479,7 @@ def render_node_view(node_dir: str, key_prefix: str):
         selected_file = st.selectbox(
             "모듈 결과 파일 선택",
             options=parquet_files,
-            key=f"{key_prefix}_module_select"
+            key=f"{key_prefix}_module_select",
         )
         if selected_file:
             try:
@@ -476,6 +495,7 @@ def render_node_view(node_dir: str, key_prefix: str):
 # Dashboard 탭 - 테스트 케이스 패널
 # ============================================================================
 
+
 def render_testcase_dashboard(testcase_name: str, col_key: str):
     """단일 테스트 케이스의 대시보드 렌더링"""
     tc = load_testcase(testcase_name)
@@ -489,7 +509,8 @@ def render_testcase_dashboard(testcase_name: str, col_key: str):
         return
 
     # 테스트 케이스 기본 정보
-    st.markdown(f"""### {testcase_name}
+    st.markdown(
+        f"""### {testcase_name}
 *{tc.description}*
 
 | 항목 | 값 |
@@ -497,7 +518,8 @@ def render_testcase_dashboard(testcase_name: str, col_key: str):
 | 입력 | `{tc.input_dir}` |
 | 청크 크기 | {tc.chunk_size} |
 | QA 개수 | {tc.num_qa} |
-""")
+"""
+    )
 
     # 서브탭 구성
     sub_tabs = ["Summary"]
@@ -507,10 +529,7 @@ def render_testcase_dashboard(testcase_name: str, col_key: str):
     sub_tabs.extend(["QA", "Config"])
 
     selected_tab = st.radio(
-        "View",
-        options=sub_tabs,
-        horizontal=True,
-        key=f"{col_key}_subtab"
+        "View", options=sub_tabs, horizontal=True, key=f"{col_key}_subtab"
     )
 
     st.divider()
@@ -531,8 +550,8 @@ def render_testcase_dashboard(testcase_name: str, col_key: str):
                 for idx, row in qa_df.iterrows():
                     with st.expander(f"Q{idx+1}: {row['query'][:50]}..."):
                         st.markdown(f"**질문:** {row['query']}")
-                        if 'generation_gt' in row and row['generation_gt']:
-                            gt = row['generation_gt']
+                        if "generation_gt" in row and row["generation_gt"]:
+                            gt = row["generation_gt"]
                             if isinstance(gt, list):
                                 gt = gt[0] if gt else ""
                             st.markdown(f"**정답:** {gt}")
@@ -562,6 +581,7 @@ def render_testcase_dashboard(testcase_name: str, col_key: str):
 # Dashboard 탭 메인
 # ============================================================================
 
+
 def render_compare_dashboard_tab(testcase_options: dict):
     """평가 결과 비교 탭 렌더링"""
     st.markdown("두 테스트 케이스의 **평가 결과**를 나란히 비교합니다.")
@@ -582,7 +602,7 @@ def render_compare_dashboard_tab(testcase_options: dict):
             "테스트 케이스 선택",
             options=option_keys,
             index=0,
-            key="dashboard_left_select"
+            key="dashboard_left_select",
         )
         left_testcase = testcase_options[left_select]
         render_testcase_dashboard(left_testcase, "dashboard_left")
@@ -593,15 +613,16 @@ def render_compare_dashboard_tab(testcase_options: dict):
             "테스트 케이스 선택",
             options=option_keys,
             index=min(1, len(option_keys) - 1),
-            key="dashboard_right_select"
+            key="dashboard_right_select",
         )
         right_testcase = testcase_options[right_select]
         render_testcase_dashboard(right_testcase, "dashboard_right")
 
 
 # ============================================================================
-# Compare Web 탭 (채팅 비교)
+# QA Test 탭 (채팅 비교)
 # ============================================================================
+
 
 def create_chat_column(col_key: str, testcase_options: dict, default_idx: int = 0):
     """채팅 컬럼 생성"""
@@ -686,10 +707,14 @@ def create_chat_column(col_key: str, testcase_options: dict, default_idx: int = 
             else:
                 answer = str(result)
 
-            st.session_state[messages_key].append({"role": "assistant", "content": answer})
+            st.session_state[messages_key].append(
+                {"role": "assistant", "content": answer}
+            )
         except Exception as e:
             error_msg = f"오류: {e}"
-            st.session_state[messages_key].append({"role": "assistant", "content": error_msg})
+            st.session_state[messages_key].append(
+                {"role": "assistant", "content": error_msg}
+            )
 
         st.rerun()
 
@@ -714,7 +739,9 @@ def render_compare_web_tab(testcase_options: dict):
             if messages_key not in st.session_state:
                 st.session_state[messages_key] = []
 
-            st.session_state[messages_key].append({"role": "user", "content": sync_query})
+            st.session_state[messages_key].append(
+                {"role": "user", "content": sync_query}
+            )
 
             # RAG 응답 생성
             if runner_key in st.session_state and st.session_state[runner_key]:
@@ -726,9 +753,13 @@ def render_compare_web_tab(testcase_options: dict):
                         answer = result.get("answer", "응답 없음")
                     else:
                         answer = str(result)
-                    st.session_state[messages_key].append({"role": "assistant", "content": answer})
+                    st.session_state[messages_key].append(
+                        {"role": "assistant", "content": answer}
+                    )
                 except Exception as e:
-                    st.session_state[messages_key].append({"role": "assistant", "content": f"오류: {e}"})
+                    st.session_state[messages_key].append(
+                        {"role": "assistant", "content": f"오류: {e}"}
+                    )
 
         st.rerun()
 
@@ -743,12 +774,15 @@ def render_compare_web_tab(testcase_options: dict):
 
     with right_col:
         st.subheader("📌 테스트 케이스 B")
-        create_chat_column("right", testcase_options, default_idx=min(1, len(testcase_options) - 1))
+        create_chat_column(
+            "right", testcase_options, default_idx=min(1, len(testcase_options) - 1)
+        )
 
 
 # ============================================================================
 # 메인
 # ============================================================================
+
 
 def main():
     set_page_config()
@@ -770,7 +804,7 @@ def main():
     testcase_options = {f"{name} - {desc}": name for name, desc in available}
 
     # 상단 탭
-    tab1, tab2 = st.tabs(["📊 Compare Dashboard", "💬 Compare Web"])
+    tab1, tab2 = st.tabs(["📊 Compare Dashboard", "💬 QA Test"])
 
     with tab1:
         render_compare_dashboard_tab(testcase_options)

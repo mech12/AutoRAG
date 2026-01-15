@@ -8,6 +8,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## 2026-01-15
+
+### Changed
+
+- **Compare Web 탭 이름을 QA Test로 변경** (`scripts/compare_web.py`)
+  - 탭 이름 "Compare Web" → "QA Test"로 변경
+  - 관련 문서 업데이트
+- **코드 포맷팅 개선** (`scripts/compare_web.py`)
+  - ruff format 적용
+  - trailing comma 추가
+
 ## 2026-01-13
 
 ### Fixed
